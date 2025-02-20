@@ -10,10 +10,10 @@ const About = () => {
           
           <div className="prose prose-lg max-w-none">
             <p className="text-gray-600 mb-8">
-              At ABI EXIM, we take pride in being a trusted exporter of premium-quality spices, fresh vegetables, and marine products from India to global markets. With over five years of experience, we have built a strong reputation for delivering excellence, reliability, and customer satisfaction.
+              At Wander Breeze EXIM, we take pride in being a trusted exporter of premium-quality spices, fresh vegetables, and marine products from India to global markets. With over five years of experience, we have built a strong reputation for delivering excellence, reliability, and customer satisfaction.
             </p>
 
-            <h3 className="text-2xl font-bold text-gray-900 mb-6">Why Choose ABI EXIM?</h3>
+            <h3 className="text-2xl font-bold text-gray-900 mb-6">Why Choose Wander Breeze EXIM?</h3>
 
             <div className="space-y-6">
               <div className="flex items-start">
@@ -66,7 +66,7 @@ const About = () => {
             </div>
 
             <p className="text-gray-600 mt-8 mb-8">
-              With a commitment to excellence and customer satisfaction, ABI EXIM continues to serve international markets with top-notch Indian spices, vegetables, and marine products. Partner with us for quality, reliability, and efficiency in global trade.
+              With a commitment to excellence and customer satisfaction, Wander Breeze EXIM continues to serve international markets with top-notch Indian spices, vegetables, and marine products. Partner with us for quality, reliability, and efficiency in global trade.
             </p>
 
             <div className="text-center">

@@ -46,10 +46,9 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
-            <button onClick={() => scrollToSection('home')} className="flex items-center">
-              <Ship className="h-8 w-8 text-green-600" />
-              <span className="ml-2 text-xl font-bold text-gray-900">ABI EXIM</span>
-            </button>
+            <a onClick={() => scrollToSection('home')} className="flex items-center">
+            <img className="wid-100" style={{ width: "100px" }} src="../../dist/assets/img/logo-black.png" />             
+            </a>
           </div>
           <div className="flex items-center">
             <div className="hidden md:flex space-x-8">
