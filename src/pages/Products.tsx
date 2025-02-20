@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 
+import Spicesimg from '../../dist/assets/img/spices.png';
+
+import VegetablesImg from '../../dist/assets/img/vegetables.avif';
+
+import MarineImg from '../../dist/assets/img/marine-products.avif';
+
 const ProductCard = ({ title, image }: { title: string; image: string }) => {
   return (
     <div className="group relative overflow-hidden rounded-lg shadow-lg transition-all duration-300 hover:scale-105 cursor-pointer">
@@ -77,17 +83,17 @@ const Products = () => {
   const products = [
     {
       title: 'Spices',
-      image: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80',
+      image: Spicesimg,
       category: 'spices'
     },
     {
       title: 'Vegetables',
-      image: 'https://images.unsplash.com/photo-1597362925123-77861d3fbac7?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80',
+      image: VegetablesImg,
       category: 'vegetables'
     },
     {
       title: 'Marine Products',
-      image: 'https://images.unsplash.com/photo-1498654200943-1088dd4438ae?ixlib=rb-1.2.1&auto=format&fit=crop&w=1000&q=80',
+      image: MarineImg,
       category: 'marine'
     }
   ];

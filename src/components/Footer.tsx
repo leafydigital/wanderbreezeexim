@@ -17,15 +17,15 @@ const Footer = () => {
             <div className="space-y-2">
               <div className="flex items-center">
                 <Mail className="h-5 w-5 mr-2" />
-                <span>info@abiexim.com</span>
+                <span><a href="mailto:wanderbreezeexim@gmail.com"> wanderbreezeexim@gmail.com</a></span>
               </div>
               <div className="flex items-center">
                 <Phone className="h-5 w-5 mr-2" />
-                <span>+91 1234567890</span>
+                <span><a href="https://wa.me/917871126830" target="_blank" rel="noopener noreferrer"> +91 7871126830</a></span>
               </div>
               <div className="flex items-center">
                 <MapPin className="h-5 w-5 mr-2" />
-                <span>Chennai, India</span>
+                <span>Tenkasi, Tamilnadu - India</span>
               </div>
             </div>
           </div>
@@ -33,13 +33,18 @@ const Footer = () => {
             <h3 className="text-xl font-bold mb-4">Follow Us</h3>
             <div className="flex space-x-4">
               <a href="#" className="hover:text-blue-400 transition-colors">
-                <Facebook className="h-6 w-6" />
+                <a href="https://www.facebook.com/profile.php?id=61573088471121" target='_blank'>
+                  <Facebook className="h-6 w-6" ></Facebook></a>
               </a>
               <a href="#" className="hover:text-blue-400 transition-colors">
-                <Twitter className="h-6 w-6" />
+                <a href="https://www.instagram.com/wanderbreezeexim" target='_blank'>
+                  <Instagram className="h-6 w-6" />
+                </a>
               </a>
               <a href="#" className="hover:text-blue-400 transition-colors">
-                <Instagram className="h-6 w-6" />
+                <a href="https://wa.me/917871126830" target='_blank'>
+                  <Phone className="h-6 w-6" />
+                </a>
               </a>
             </div>
           </div>

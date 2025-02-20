@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Ship } from 'lucide-react';
 
+import logoBlack from '../../dist/assets/img/logo-black.png';
+
 const Navbar = () => {
   const [activeSection, setActiveSection] = useState('home');
 
@@ -47,7 +49,7 @@ const Navbar = () => {
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <a onClick={() => scrollToSection('home')} className="flex items-center">
-            <img className="wid-100" style={{ width: "100px" }} src="../../dist/assets/img/logo-black.png" />             
+            <img className="wid-100" style={{ width: "100px" }} src={logoBlack} />             
             </a>
           </div>
           <div className="flex items-center">

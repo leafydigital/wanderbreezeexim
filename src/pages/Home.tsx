@@ -1,12 +1,15 @@
 import React from 'react';
 import { ArrowRight } from 'lucide-react';
 
+import Background from '../../dist/assets/img/spices.png';
+
 const Home = () => {
   return (
     <div>
       <div className="relative h-[600px]">
         <img
-          src="https://images.unsplash.com/photo-1596040033229-a9821ebd058d?ixlib=rb-1.2.1&auto=format&fit=crop&w=2000&q=80"
+          // src="https://images.unsplash.com/photo-1596040033229-a9821ebd058d?ixlib=rb-1.2.1&auto=format&fit=crop&w=2000&q=80"
+          src={Background}
           alt="Export Business"
           className="w-full h-full object-cover"
         />
