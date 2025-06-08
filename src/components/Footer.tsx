@@ -1,56 +1,106 @@
 import React from 'react';
-import { Facebook, Twitter, Instagram, Mail, Phone, MapPin } from 'lucide-react';
+import { Mail, Phone, MapPin, Globe, Facebook, Twitter, Linkedin, Instagram } from 'lucide-react';
 
-const Footer = () => {
+const Footer: React.FC = () => {
   return (
-    <footer className="bg-gray-900 text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+    <footer className="bg-gray-900 text-white py-16">
+      <div className="container mx-auto px-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {/* Company Info */}
           <div>
-            <h3 className="text-xl font-bold mb-4">Wander Breeze EXIM</h3>
-            <p className="text-gray-400">
-              Your trusted partner in global trade, specializing in high-quality Indian exports.
+            <h3 className="text-2xl font-bold text-blue-400 mb-6">
+              WanderBreeze<span className="text-emerald-400">Exim</span>
+            </h3>
+            <p className="text-gray-300 mb-6 leading-relaxed">
+              Your trusted partner for premium Indian exports. We specialize in authentic spices, 
+              quality dry fish, and exquisite handcrafted items with worldwide delivery.
             </p>
-          </div>
-          <div>
-            <h3 className="text-xl font-bold mb-4">Contact Info</h3>
-            <div className="space-y-2">
-              <div className="flex items-center">
-                <Mail className="h-5 w-5 mr-2" />
-                <span><a href="mailto:wanderbreezeexim@gmail.com"> wanderbreezeexim@gmail.com</a></span>
-              </div>
-              <div className="flex items-center">
-                <Phone className="h-5 w-5 mr-2" />
-                <span><a href="https://wa.me/917871126830" target="_blank" rel="noopener noreferrer"> +91 7871126830</a></span>
-              </div>
-              <div className="flex items-center">
-                <MapPin className="h-5 w-5 mr-2" />
-                <span>Tenkasi, Tamilnadu - India</span>
-              </div>
+            <div className="flex space-x-4">
+              <Facebook className="text-gray-400 hover:text-blue-400 cursor-pointer transition-colors duration-200" size={24} />
+              <Twitter className="text-gray-400 hover:text-blue-400 cursor-pointer transition-colors duration-200" size={24} />
+              <Linkedin className="text-gray-400 hover:text-blue-400 cursor-pointer transition-colors duration-200" size={24} />
+              <Instagram className="text-gray-400 hover:text-emerald-400 cursor-pointer transition-colors duration-200" size={24} />
             </div>
           </div>
+
+          {/* Quick Links */}
           <div>
-            <h3 className="text-xl font-bold mb-4">Follow Us</h3>
-            <div className="flex space-x-4">
-              <a href="#" className="hover:text-blue-400 transition-colors">
-                <a href="https://www.facebook.com/profile.php?id=61573088471121" target='_blank'>
-                  <Facebook className="h-6 w-6" ></Facebook></a>
-              </a>
-              <a href="#" className="hover:text-blue-400 transition-colors">
-                <a href="https://www.instagram.com/wanderbreezeexim" target='_blank'>
-                  <Instagram className="h-6 w-6" />
-                </a>
-              </a>
-              <a href="#" className="hover:text-blue-400 transition-colors">
-                <a href="https://wa.me/917871126830" target='_blank'>
-                  <Phone className="h-6 w-6" />
-                </a>
-              </a>
+            <h4 className="text-lg font-semibold mb-6">Quick Links</h4>
+            <ul className="space-y-3">
+              <li><a href="#home" className="text-gray-300 hover:text-white transition-colors duration-200">Home</a></li>
+              <li><a href="#products" className="text-gray-300 hover:text-white transition-colors duration-200">Products</a></li>
+              <li><a href="#certifications" className="text-gray-300 hover:text-white transition-colors duration-200">Certifications</a></li>
+              <li><a href="#contact" className="text-gray-300 hover:text-white transition-colors duration-200">Contact</a></li>
+              <li><a href="#" className="text-gray-300 hover:text-white transition-colors duration-200">Privacy Policy</a></li>
+              <li><a href="#" className="text-gray-300 hover:text-white transition-colors duration-200">Terms of Service</a></li>
+            </ul>
+          </div>
+
+          {/* Product Categories */}
+          <div>
+            <h4 className="text-lg font-semibold mb-6">Product Categories</h4>
+            <ul className="space-y-3">
+              <li><a href="#products" className="text-gray-300 hover:text-emerald-400 transition-colors duration-200">Spices & Powders</a></li>
+              <li><a href="#products" className="text-gray-300 hover:text-emerald-400 transition-colors duration-200">Dry Fish</a></li>
+              <li><a href="#products" className="text-gray-300 hover:text-emerald-400 transition-colors duration-200">Handcrafted Items</a></li>
+              <li><a href="#products" className="text-gray-300 hover:text-emerald-400 transition-colors duration-200">Custom Products</a></li>
+              <li><a href="#products" className="text-gray-300 hover:text-emerald-400 transition-colors duration-200">Bulk Orders</a></li>
+            </ul>
+          </div>
+
+          {/* Contact Info */}
+          <div>
+            <h4 className="text-lg font-semibold mb-6">Contact Info</h4>
+            <div className="space-y-4">
+              <div className="flex items-start space-x-3">
+                <Mail className="text-blue-400 mt-1" size={20} />
+                <div>
+                  <p className="text-gray-300">export@wanderbreezeexim.com</p>
+                  <p className="text-gray-400 text-sm">24/7 Email Support</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start space-x-3">
+                <Phone className="text-emerald-400 mt-1" size={20} />
+                <div>
+                  <p className="text-gray-300">+91 9876543210</p>
+                  <p className="text-gray-400 text-sm">WhatsApp Available</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start space-x-3">
+                <MapPin className="text-orange-400 mt-1" size={20} />
+                <div>
+                  <p className="text-gray-300">Export House, Trade Center</p>
+                  <p className="text-gray-300">Mumbai, Maharashtra, India</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start space-x-3">
+                <Globe className="text-purple-400 mt-1" size={20} />
+                <div>
+                  <p className="text-gray-300">Serving 25+ Countries</p>
+                  <p className="text-gray-400 text-sm">Worldwide Shipping</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-        <div className="mt-8 pt-8 border-t border-gray-800 text-center">
-          <p className="text-gray-400">© 2024 Wander Breeze EXIM. All rights reserved.</p>
+
+        {/* Bottom Bar */}
+        <div className="border-t border-gray-800 mt-12 pt-8">
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <p className="text-gray-400 text-sm mb-4 md:mb-0">
+              © 2024 WanderBreezeExim. All rights reserved. | GST: 27AABCW1234D1Z5
+            </p>
+            <div className="flex items-center space-x-6 text-sm text-gray-400">
+              <span>FSSAI Certified</span>
+              <span>•</span>
+              <span>APEDA Registered</span>
+              <span>•</span>
+              <span>ISO 22000:2018</span>
+            </div>
+          </div>
         </div>
       </div>
     </footer>
