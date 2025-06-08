@@ -55,7 +55,7 @@ const Footer: React.FC = () => {
               <div className="flex items-start space-x-3">
                 <Mail className="text-blue-400 mt-1" size={20} />
                 <div>
-                  <p className="text-gray-300">export@wanderbreezeexim.com</p>
+                  <p className="text-gray-300"><a href="mailto:wanderbreezeexim@gmail.com"> wanderbreezeexim@gmail.com</a></p>
                   <p className="text-gray-400 text-sm">24/7 Email Support</p>
                 </div>
               </div>
@@ -63,7 +63,7 @@ const Footer: React.FC = () => {
               <div className="flex items-start space-x-3">
                 <Phone className="text-emerald-400 mt-1" size={20} />
                 <div>
-                  <p className="text-gray-300">+91 9876543210</p>
+                  <p className="text-gray-300"><a href="https://wa.me/917358060254" target="_blank" rel="noopener noreferrer"> +91 73580 60254 </a></p>
                   <p className="text-gray-400 text-sm">WhatsApp Available</p>
                 </div>
               </div>
@@ -71,8 +71,8 @@ const Footer: React.FC = () => {
               <div className="flex items-start space-x-3">
                 <MapPin className="text-orange-400 mt-1" size={20} />
                 <div>
-                  <p className="text-gray-300">Export House, Trade Center</p>
-                  <p className="text-gray-300">Mumbai, Maharashtra, India</p>
+                  <p className="text-gray-300">Wander Breeze Exim, Madathur</p>
+                  <p className="text-gray-300">Tenkasi, Tamilnadu, India</p>
                 </div>
               </div>
               
@@ -91,7 +91,7 @@ const Footer: React.FC = () => {
         <div className="border-t border-gray-800 mt-12 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-gray-400 text-sm mb-4 md:mb-0">
-              © 2024 WanderBreezeExim. All rights reserved. | GST: 27AABCW1234D1Z5
+              © {new Date().getFullYear()} WanderBreezeExim. All rights reserved. | GST: 27AABCW1234D1Z5
             </p>
             <div className="flex items-center space-x-6 text-sm text-gray-400">
               <span>FSSAI Certified</span>
