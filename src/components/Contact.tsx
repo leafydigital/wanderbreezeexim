@@ -80,8 +80,8 @@ const Contact: React.FC = () => {
                   <MapPin className="text-orange-600 mt-1" size={24} />
                   <div>
                     <h4 className="font-semibold text-gray-800">Address</h4>
-                    <p className="text-gray-600">Wander Breeze Exim, Madathur</p>
-                    <p className="text-gray-600">Tenkasi, Tamilnadu, India</p>
+                    <p className="text-gray-600">Wander Breeze Exim, Mannammoola</p>
+                    <p className="text-gray-600">Thiruvananthapuram, Kerala, India</p>
                   </div>
                 </div>
 
@@ -89,8 +89,8 @@ const Contact: React.FC = () => {
                   <Clock className="text-purple-600 mt-1" size={24} />
                   <div>
                     <h4 className="font-semibold text-gray-800">Business Hours</h4>
-                    <p className="text-gray-600">Mon - Fri: 9:00 AM - 6:00 PM IST</p>
-                    <p className="text-gray-600">Sat: 9:00 AM - 2:00 PM IST</p>
+                    <p className="text-gray-600">Mon - Sat: 8:00 AM - 8:00 PM IST</p>
+                    <p className="text-gray-600">Sun: 9:00 AM - 2:00 PM IST</p>
                   </div>
                 </div>
               </div>

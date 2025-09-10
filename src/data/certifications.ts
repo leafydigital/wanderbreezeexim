@@ -4,7 +4,7 @@ export const certifications: Certification[] = [
   {
     id: 'gst',
     name: 'GST Registration',
-    number: '27AABCW1234D1Z5',
+    number: '32AAECW0943R1ZY',
     authority: 'Government of India',
     description: 'Goods and Services Tax registration for legitimate business operations'
   },
