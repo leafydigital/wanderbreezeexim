@@ -19,7 +19,7 @@ const Footer: React.FC = () => {
               <Facebook className="text-gray-400 hover:text-blue-400 cursor-pointer transition-colors duration-200" size={24} />
               <Twitter className="text-gray-400 hover:text-blue-400 cursor-pointer transition-colors duration-200" size={24} />
               <Linkedin className="text-gray-400 hover:text-blue-400 cursor-pointer transition-colors duration-200" size={24} />
-              <Instagram className="text-gray-400 hover:text-emerald-400 cursor-pointer transition-colors duration-200" <a href="https://www.instagram.com/wanderbreezeexim/" target="_blank" rel="noopener noreferrer"> size={24} />
+              <Instagram className="text-gray-400 hover:text-emerald-400 cursor-pointer transition-colors duration-200" size={24} />
             </div>
           </div>
 
