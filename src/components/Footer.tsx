@@ -1,5 +1,6 @@
 import React from 'react';
 import { Mail, Phone, MapPin, Globe, Facebook, Twitter, Linkedin, Instagram } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const Footer: React.FC = () => {
   return (
@@ -12,14 +13,44 @@ const Footer: React.FC = () => {
               WanderBreeze<span className="text-emerald-400">Exim</span>
             </h3>
             <p className="text-gray-300 mb-6 leading-relaxed">
-              Your trusted partner for premium Indian exports. We specialize in authentic spices, 
+              Your trusted partner for premium Indian exports. We specialize in authentic spices,
               quality dry fish, and exquisite handcrafted items with worldwide delivery.
             </p>
             <div className="flex space-x-4">
-              <Facebook className="text-gray-400 hover:text-blue-400 cursor-pointer transition-colors duration-200" size={24} />
-              <Twitter className="text-gray-400 hover:text-blue-400 cursor-pointer transition-colors duration-200" size={24} />
-              <Linkedin className="text-gray-400 hover:text-blue-400 cursor-pointer transition-colors duration-200" size={24} />
-              <Instagram className="text-gray-400 hover:text-emerald-400 cursor-pointer transition-colors duration-200" size={24} />
+              <a
+                href="https://www.facebook.com/people/Wander-Breeze-Exim/61573088471121/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Facebook
+                  className="text-gray-400 hover:text-blue-400 cursor-pointer transition-colors duration-200"
+                  size={24}
+                />
+              </a>
+
+              {/* <Twitter className="text-gray-400 hover:text-blue-400 cursor-pointer transition-colors duration-200" size={24} /> */}
+
+              <a
+                href="https://www.linkedin.com/company/wander-breeze-exim"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Linkedin
+                  className="text-gray-400 hover:text-emerald-400 cursor-pointer transition-colors duration-200"
+                  size={24}
+                />
+              </a>
+              <a
+                href="https://www.instagram.com/wanderbreezeexim/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Instagram
+                  className="text-gray-400 hover:text-emerald-400 cursor-pointer transition-colors duration-200"
+                  size={24}
+                />
+              </a>
+
             </div>
           </div>
 
@@ -31,8 +62,22 @@ const Footer: React.FC = () => {
               <li><a href="#products" className="text-gray-300 hover:text-white transition-colors duration-200">Products</a></li>
               <li><a href="#certifications" className="text-gray-300 hover:text-white transition-colors duration-200">Certifications</a></li>
               <li><a href="#contact" className="text-gray-300 hover:text-white transition-colors duration-200">Contact</a></li>
-              <li><a href="#" className="text-gray-300 hover:text-white transition-colors duration-200">Privacy Policy</a></li>
-              <li><a href="#" className="text-gray-300 hover:text-white transition-colors duration-200">Terms of Service</a></li>
+              <li>
+                <Link
+                  to="/privacy-policy"
+                  className="text-gray-300 hover:text-white transition-colors duration-200"
+                >
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/terms-conditions"
+                  className="text-gray-300 hover:text-white transition-colors duration-200"
+                >
+                  Terms of Service
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -59,7 +104,7 @@ const Footer: React.FC = () => {
                   <p className="text-gray-400 text-sm">24/7 Email Support</p>
                 </div>
               </div>
-              
+
               <div className="flex items-start space-x-3">
                 <Phone className="text-emerald-400 mt-1" size={20} />
                 <div>
@@ -67,7 +112,7 @@ const Footer: React.FC = () => {
                   <p className="text-gray-400 text-sm">WhatsApp Available</p>
                 </div>
               </div>
-              
+
               <div className="flex items-start space-x-3">
                 <MapPin className="text-orange-400 mt-1" size={20} />
                 <div>
@@ -75,7 +120,7 @@ const Footer: React.FC = () => {
                   <p className="text-gray-300">Thiruvananthapuram, Kerala, India</p>
                 </div>
               </div>
-              
+
               <div className="flex items-start space-x-3">
                 <Globe className="text-purple-400 mt-1" size={20} />
                 <div>
