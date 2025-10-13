@@ -39,43 +39,5 @@
         <changefreq>yearly</changefreq>
         <priority>0.5</priority>
     </url>
-
-    <url>
-        <loc>https://wanderbreezeexim.com/products/spices-powders</loc>
-        <lastmod>2025-10-08</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.8</priority>
-    </url>
-    <url>
-        <loc>https://wanderbreezeexim.com/products/dry-fish</loc>
-        <lastmod>2025-10-08</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.8</priority>
-    </url>
-    <url>
-        <loc>https://wanderbreezeexim.com/products/handcrafted-items</loc>
-        <lastmod>2025-10-08</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.8</priority>
-    </url>
-
-    <url>
-        <loc>https://wanderbreezeexim.com/products/garlic-powder</loc>
-        <lastmod>2025-10-08</lastmod>
-        <changefreq>monthly</changefreq>
-        <priority>0.6</priority>
-    </url>
-    <url>
-        <loc>https://wanderbreezeexim.com/products/turmeric-powder</loc>
-        <lastmod>2025-10-08</lastmod>
-        <changefreq>monthly</changefreq>
-        <priority>0.6</priority>
-    </url>
-    <url>
-        <loc>https://wanderbreezeexim.com/products/dried-prawns</loc>
-        <lastmod>2025-10-08</lastmod>
-        <changefreq>monthly</changefreq>
-        <priority>0.6</priority>
-    </url>
     
 </urlset>
