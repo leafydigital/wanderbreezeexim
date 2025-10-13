@@ -8,6 +8,7 @@ import Contact from './components/Contact';
 import Footer from './components/Footer';
 import PrivacyPolicy from './components/PrivacyPolicy'; // 👈 Create this file next
 import TermsAndConditions from './components/TermsAndConditions';
+import NotFound from './NotFound';
 
 function HomePage() {
   const sectionRefs = {
@@ -51,6 +52,8 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/terms-conditions" element={<TermsAndConditions />} />
+
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
   );
