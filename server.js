@@ -76,6 +76,7 @@ app.post("/api/contact", async (req, res) => {
         const mailOptions = {
             from: process.env.EMAIL_USER,
             to: "samrajakumarmdr@gmail.com",
+            cc: "abitha.d.official@gmail.com",
             subject: `New Contact Message - ${name}`,
             text: `Name: ${name}\nEmail: ${email}\nPhone: ${phone}\nMessage: ${message}`,
         };
@@ -127,6 +128,7 @@ app.post("/api/leafycontact", async (req, res) => {
         const LeafymailOptions = {
             from: process.env.EMAIL_USER,
             to: "samrajakumarmdr@gmail.com",
+            cc: "abitha.d.official@gmail.com",
             subject: `New Enquiry Message - ${name}`,
             text: `Name: ${name}\nEmail: ${email}\nCompany: ${company}\nMessage: ${message}`,
         };
