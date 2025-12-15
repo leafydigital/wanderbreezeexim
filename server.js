@@ -1,7 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-const mongoose = require("mongoose");
+//const mongoose = require("mongoose");
 const nodemailer = require("nodemailer");
 
 const app = express();
@@ -32,22 +32,22 @@ app.use(express.json());
 app.options("*", cors());
 
 // ✅ Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-})
-.then(() => console.log("✅ MongoDB Connected"))
-.catch(err => console.error("❌ MongoDB Connection Error:", err));
+// mongoose.connect(process.env.MONGO_URI, {
+//     useNewUrlParser: true,
+//     useUnifiedTopology: true,
+// })
+// .then(() => console.log("✅ MongoDB Connected"))
+// .catch(err => console.error("❌ MongoDB Connection Error:", err));
 
 // ✅ Define Mongoose Schema
-const contactSchema = new mongoose.Schema({
-    name: String,
-    email: String,
-    phone: String,
-    message: String,
-    createdAt: { type: Date, default: Date.now }
-});
-const Contact = mongoose.model("Contact", contactSchema);
+// const contactSchema = new mongoose.Schema({
+//     name: String,
+//     email: String,
+//     phone: String,
+//     message: String,
+//     createdAt: { type: Date, default: Date.now }
+// });
+// const Contact = mongoose.model("Contact", contactSchema);
 
 // ✅ Setup Nodemailer (with error handling)
 const transporter = nodemailer.createTransport({
@@ -68,15 +68,15 @@ app.post("/api/contact", async (req, res) => {
         }
 
         // ✅ Save to MongoDB
-        const newContact = new Contact({ company_name, name, email, phone, country, message });
-        await newContact.save();
+        // const newContact = new Contact({ company_name, name, email, phone, country, message });
+        // await newContact.save();
 
         // ✅ Send Email Notification
         const mailOptions = {
             from: process.env.EMAIL_USER,
             to: "samrajakumarmdr@gmail.com",
             cc: "abitha.d.official@gmail.com",
-            subject: `New Contact Message - ${name}`,
+            subject: `Wander Breeze Enquiry Message - ${company_name}`,
             text: `Company Name: ${company_name}\nName: ${name}\nEmail: ${email}\nPhone: ${phone}\Country: ${country}\nMessage: ${message}`,
         };
         
