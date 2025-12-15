@@ -9,8 +9,7 @@ const app = express();
 // ✅ Enable CORS for your frontend
 const allowedOrigins = [
   "https://bright-hotteok-8fc084.netlify.app",
-  "https://wanderbreezeexim.com/",
-  "https://leafydigital.com/"
+  "https://wanderbreezeexim.com/"
 ];
 
 
