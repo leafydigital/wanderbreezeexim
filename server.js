@@ -9,7 +9,8 @@ const app = express();
 // ✅ Enable CORS for your frontend
 const allowedOrigins = [
   "https://bright-hotteok-8fc084.netlify.app",
-  "https://wanderbreezeexim.com/"
+  "https://wanderbreezeexim.com/",
+  "https://leafydigital.com/"
 ];
 
 
@@ -87,6 +88,60 @@ app.post("/api/contact", async (req, res) => {
         res.status(500).json({ success: false, message: "Server Error" });
     }
 });
+
+////////////////////////////////Leafy Digital Contact Starts///////////////////////////////////////////////////
+
+// ✅ Define Mongoose Schema
+// const LeafyDigitalcontactSchema = new mongoose.Schema({
+//     name: String,
+//     email: String,
+//     company: String,
+//     message: String,
+//     createdAt: { type: Date, default: Date.now }
+// }); //sometimes not needed
+// const LeafyDigitalContact = mongoose.model("LeafyDigitalContact", LeafyDigitalcontactSchema); //sometimes not needed
+
+// ✅ Setup Nodemailer (with error handling)
+const LeafyDigitaltransporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+        user: process.env.EMAIL_USER || "",
+        pass: process.env.EMAIL_PASS || "",
+    },
+});
+
+// ✅ API Route to Handle Contact Form
+app.post("/api/leafycontact", async (req, res) => {
+    try {
+        const { name, email, company, message } = req.body;
+
+        if (!name || !email || !company || !message) {
+            return res.status(400).json({ success: false, message: "Missing required fields" });
+        }
+
+        // ✅ Save to MongoDB
+        // const newContact = new Contact({ name, email, phone, message });
+        // await newContact.save();
+
+        // ✅ Send Email Notification
+        const LeafymailOptions = {
+            from: process.env.EMAIL_USER,
+            to: "samrajakumarmdr@gmail.com",
+            subject: `New Enquiry Message - ${name}`,
+            text: `Name: ${name}\nEmail: ${email}\nCompany: ${company}\nMessage: ${message}`,
+        };
+        
+        await LeafyDigitaltransporter.sendMail(LeafymailOptions);
+
+        res.json({ success: true, message: "Message Sent Successfully!" });
+    } catch (error) {
+        console.error("❌ Error:", error);
+        res.status(500).json({ success: false, message: "Server Error" });
+    }
+});
+
+
+////////////////////////////////Leafy Digital Contact Ends////////////////////////////////////////////////////
 
 // ✅ Start the Server
 const PORT = process.env.PORT || 5000;
