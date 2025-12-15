@@ -61,14 +61,14 @@ const transporter = nodemailer.createTransport({
 // ✅ API Route to Handle Contact Form
 app.post("/api/contact", async (req, res) => {
     try {
-        const { name, email, phone, message } = req.body;
+        const { company_name, name, email, phone, country, message } = req.body;
 
-        if (!name || !email || !message) {
+        if (!company_name || !name || !email || !phone || !country || !message) {
             return res.status(400).json({ success: false, message: "Missing required fields" });
         }
 
         // ✅ Save to MongoDB
-        const newContact = new Contact({ name, email, phone, message });
+        const newContact = new Contact({ company_name, name, email, phone, country, message });
         await newContact.save();
 
         // ✅ Send Email Notification
@@ -77,7 +77,7 @@ app.post("/api/contact", async (req, res) => {
             to: "samrajakumarmdr@gmail.com",
             cc: "abitha.d.official@gmail.com",
             subject: `New Contact Message - ${name}`,
-            text: `Name: ${name}\nEmail: ${email}\nPhone: ${phone}\nMessage: ${message}`,
+            text: `Company Name: ${company_name}\nName: ${name}\nEmail: ${email}\nPhone: ${phone}\Country: ${country}\nMessage: ${message}`,
         };
         
         await transporter.sendMail(mailOptions);
