@@ -9,7 +9,7 @@ const app = express();
 // ✅ Enable CORS for your frontend
 const allowedOrigins = [
   "https://bright-hotteok-8fc084.netlify.app",
-  "https://wanderbreezeexim.com/"
+  "https://wanderbreezeexim.com"
 ];
 
 
@@ -102,13 +102,13 @@ app.post("/api/contact", async (req, res) => {
 // const LeafyDigitalContact = mongoose.model("LeafyDigitalContact", LeafyDigitalcontactSchema); //sometimes not needed
 
 // ✅ Setup Nodemailer (with error handling)
-const LeafyDigitaltransporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-        user: process.env.EMAIL_USER || "",
-        pass: process.env.EMAIL_PASS || "",
-    },
-});
+// const LeafyDigitaltransporter = nodemailer.createTransport({
+//     service: "gmail",
+//     auth: {
+//         user: process.env.EMAIL_USER || "",
+//         pass: process.env.EMAIL_PASS || "",
+//     },
+// });
 
 // ✅ API Route to Handle Contact Form
 app.post("/api/leafycontact", async (req, res) => {
@@ -132,7 +132,7 @@ app.post("/api/leafycontact", async (req, res) => {
             text: `Name: ${name}\nEmail: ${email}\nCompany: ${company}\nMessage: ${message}`,
         };
         
-        await LeafyDigitaltransporter.sendMail(LeafymailOptions);
+        await transporter.sendMail(LeafymailOptions);//using the same transporter without using new one for leafy digital
 
         res.json({ success: true, message: "Message Sent Successfully!" });
     } catch (error) {
