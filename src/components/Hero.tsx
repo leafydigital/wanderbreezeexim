@@ -49,7 +49,7 @@ const Hero: React.FC<HeroProps> = ({ onNavigate }) => {
             <div className="flex flex-col items-center p-6 bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200">
               <Award className="text-emerald-600 mb-4" size={48} />
               <h3 className="text-xl font-semibold mb-2">Certified Quality</h3>
-              <p className="text-gray-600 text-center">FSSAI, APEDA, and Spices Board certified products</p>
+              <p className="text-gray-600 text-center">FSSAI certified products</p>
             </div>
             
             <div className="flex flex-col items-center p-6 bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200">

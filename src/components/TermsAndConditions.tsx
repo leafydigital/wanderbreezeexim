@@ -4,7 +4,7 @@ import Header from '../components/Header';
 const TermsAndConditions = () => {
     return (
         <>
-            <Header noMenu /> {/* 👈 Simple and clean */}
+            {/* <Header noMenu /> 👈 Simple and clean */}
             <main className="max-w-3xl mx-auto p-6">
                 <h1 className="text-3xl font-bold mb-4">Terms and Conditions</h1>
                 <main className="container" role="main">

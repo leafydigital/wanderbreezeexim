@@ -1,13 +1,17 @@
 import React, { useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+
 import Header from './components/Header';
+import Footer from './components/Footer';
+
 import Hero from './components/Hero';
 import Products from './components/Products';
 import Certifications from './components/Certifications';
 import Contact from './components/Contact';
-import Footer from './components/Footer';
-import PrivacyPolicy from './components/PrivacyPolicy'; // 👈 Create this file next
+
+import PrivacyPolicy from './components/PrivacyPolicy';
 import TermsAndConditions from './components/TermsAndConditions';
+import PaymentTerms from './components/PaymentTerms';
 import NotFound from './NotFound';
 
 function HomePage() {
@@ -26,8 +30,7 @@ function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      <Header onNavigate={scrollToSection} />
+    <>
       <div ref={sectionRefs.home}>
         <Hero onNavigate={scrollToSection} />
       </div>
@@ -40,21 +43,26 @@ function HomePage() {
       <div ref={sectionRefs.contact}>
         <Contact />
       </div>
-      <Footer />
-    </div>
+    </>
   );
 }
 
 function App() {
   return (
     <Router>
+      {/* ✅ Header now global */}
+      <Header />
+
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/terms-conditions" element={<TermsAndConditions />} />
-
+        <Route path="/payment-terms" element={<PaymentTerms />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
+
+      {/* ✅ Footer now global */}
+      <Footer />
     </Router>
   );
 }
