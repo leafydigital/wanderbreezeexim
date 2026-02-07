@@ -79,7 +79,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         </div>
 
         {/* Transport Options */}
-        <div className="mt-4 p-4 border border-gray-200 rounded-lg">
+        {/* <div className="mt-4 p-4 border border-gray-200 rounded-lg">
           <h4 className="font-semibold text-gray-700 mb-3 flex items-center space-x-2">
             <span>Transport & Delivery</span>
           </h4>
@@ -97,16 +97,16 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               <span className="text-gray-600">{product.deliveryTime.sea}</span>
             </div>
           </div>
-        </div>
+        </div> */}
 
         {/* Payment Terms */}
-        <div className="mt-4 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
+        {/* <div className="mt-4 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
           <div className="flex items-center space-x-2 mb-2">
             <CreditCard size={16} className="text-green-600" />
             <span className="font-semibold text-gray-700">Payment Terms</span>
           </div>
           <p className="text-sm text-gray-600">{product.paymentTerms}</p>
-        </div>
+        </div> */}
 
         {/* Contact for Price Button */}
         <button className="w-full mt-6 bg-gradient-to-r from-blue-700 to-emerald-600 text-white py-3 rounded-lg font-semibold hover:from-blue-800 hover:to-emerald-700 transition-all duration-200 transform hover:scale-105"

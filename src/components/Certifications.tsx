@@ -11,7 +11,7 @@ const Certifications: React.FC = () => {
             <Shield className="text-blue-700" size={48} />
           </div>
           <h2 className="text-4xl font-bold text-gray-800 mb-4">
-            Our <span className="text-blue-700">Certifications</span>
+            Our <span className="text-blue-700"> Legal Registrations & Certifications</span>
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
             We maintain the highest standards of quality and compliance. 

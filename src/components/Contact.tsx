@@ -62,7 +62,7 @@ const Contact: React.FC = () => {
                   <Mail className="text-blue-700 mt-1" size={24} />
                   <div>
                     <h4 className="font-semibold text-gray-800">Email</h4>
-                    <p className="text-gray-600"><a href="mailto:wanderbreezeexim@gmail.com"> wanderbreezeexim@gmail.com</a></p>
+                    <p className="text-gray-600"><a href="mailto:contact@wanderbreezeexim.com"> contact@wanderbreezeexim.com</a></p>
                     <p className="text-sm text-gray-500">For quotations and inquiries</p>
                   </div>
                 </div>

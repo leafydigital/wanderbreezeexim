@@ -86,8 +86,8 @@ const Footer: React.FC = () => {
             <h4 className="text-lg font-semibold mb-6">Product Categories</h4>
             <ul className="space-y-3">
               <li><a href="#products" className="text-gray-300 hover:text-emerald-400 transition-colors duration-200">Spices & Powders</a></li>
-              <li><a href="#products" className="text-gray-300 hover:text-emerald-400 transition-colors duration-200">Dry Fish</a></li>
-              <li><a href="#products" className="text-gray-300 hover:text-emerald-400 transition-colors duration-200">Handcrafted Items</a></li>
+              <li><a href="#products" className="text-gray-300 hover:text-emerald-400 transition-colors duration-200">Agro Products</a></li>
+              {/* <li><a href="#products" className="text-gray-300 hover:text-emerald-400 transition-colors duration-200">Handcrafted Items</a></li> */}
               <li><a href="#products" className="text-gray-300 hover:text-emerald-400 transition-colors duration-200">Custom Products</a></li>
               <li><a href="#products" className="text-gray-300 hover:text-emerald-400 transition-colors duration-200">Bulk Orders</a></li>
             </ul>
@@ -100,7 +100,7 @@ const Footer: React.FC = () => {
               <div className="flex items-start space-x-3">
                 <Mail className="text-blue-400 mt-1" size={20} />
                 <div>
-                  <p className="text-gray-300"><a href="mailto:wanderbreezeexim@gmail.com"> wanderbreezeexim@gmail.com</a></p>
+                  <p className="text-gray-300"><a href="mailto:contact@wanderbreezeexim.com"> contact@wanderbreezeexim.com</a></p>
                   <p className="text-gray-400 text-sm">24/7 Email Support</p>
                 </div>
               </div>
@@ -136,14 +136,14 @@ const Footer: React.FC = () => {
         <div className="border-t border-gray-800 mt-12 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-gray-400 text-sm mb-4 md:mb-0">
-              © {new Date().getFullYear()} WanderBreezeExim. All rights reserved. | GST: 32AAECW0943R1ZY
+              © {new Date().getFullYear()} Wander Breeze Exim. All rights reserved. | GST: 32AAECW0943R1ZY
             </p>
             <div className="flex items-center space-x-6 text-sm text-gray-400">
               <span>FSSAI Certified</span>
               <span>•</span>
               <span>APEDA Registered</span>
               <span>•</span>
-              <span>ISO 22000:2018</span>
+              <span>IEC Registered</span>
             </div>
           </div>
         </div>

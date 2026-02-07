@@ -1,22 +1,29 @@
 import React, { useEffect, useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import logoBlack from '../../dist/assets/img/wander-breeze-website-logo-black.png';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 interface HeaderProps {
   onNavigate?: (section: string) => void;
-  noMenu?: boolean; // 👈 Add this prop
+  noMenu?: boolean;
 }
 
 const Header: React.FC<HeaderProps> = ({ onNavigate, noMenu = false }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
 
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Scroll spy only on homepage
   useEffect(() => {
-    if (noMenu) return; // 👈 Skip scroll handling when no menus
+    if (noMenu) return;
+    if (location.pathname !== '/') return;
+
     const handleScroll = () => {
-      const sections = ['home', 'about', 'products', 'certifications', 'contact'];
+      const sections = ['home', 'products', 'certifications', 'contact'];
       const scrollPosition = window.scrollY + 100;
+
       for (const section of sections) {
         const element = document.getElementById(section);
         if (element) {
@@ -28,16 +35,41 @@ const Header: React.FC<HeaderProps> = ({ onNavigate, noMenu = false }) => {
         }
       }
     };
+
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [noMenu]);
+  }, [noMenu, location.pathname]);
 
-  const scrollToSection = (sectionId: string) => {
-    const element = document.getElementById(sectionId);
-    if (element) {
-      const navbarHeight = 64;
-      const targetPosition = element.offsetTop - navbarHeight;
-      window.scrollTo({ top: targetPosition, behavior: 'smooth' });
+  // Handle scroll or page navigation
+  const handleNavigation = (section: string) => {
+    setIsMenuOpen(false);
+
+    // If Payment Terms → go to new page
+    if (section === 'paymentterms') {
+      navigate('/payment-terms');
+      return;
+    }
+
+    // If already on homepage → scroll
+    if (location.pathname === '/') {
+      const element = document.getElementById(section);
+      if (element) {
+        const navbarHeight = 80;
+        const targetPosition = element.offsetTop - navbarHeight;
+        window.scrollTo({ top: targetPosition, behavior: 'smooth' });
+      }
+    } 
+    // If on another page → first go to homepage, then scroll
+    else {
+      navigate('/');
+      setTimeout(() => {
+        const element = document.getElementById(section);
+        if (element) {
+          const navbarHeight = 80;
+          const targetPosition = element.offsetTop - navbarHeight;
+          window.scrollTo({ top: targetPosition, behavior: 'smooth' });
+        }
+      }, 300);
     }
   };
 
@@ -45,24 +77,19 @@ const Header: React.FC<HeaderProps> = ({ onNavigate, noMenu = false }) => {
     { label: 'Home', section: 'home' },
     { label: 'Products', section: 'products' },
     { label: 'Certifications', section: 'certifications' },
+    { label: 'Payment Terms', section: 'paymentterms' }, // 👈 new page
     { label: 'Contact', section: 'contact' },
   ];
 
   return (
     <header className="bg-white shadow-lg sticky top-0 z-50">
       <div className="container mx-auto px-4 flex justify-between items-center py-4">
-        {/* Logo */}
-        <div className="flex items-center">
-          <Link to="/" className="flex items-center">
-            <img
-              src={logoBlack}
-              alt="Wander Breeze"
-              style={{ width: '150px' }}
-            />
-          </Link>
-        </div>
 
-        {/* Only render menus if noMenu = false */}
+        {/* Logo */}
+        <Link to="/" className="flex items-center">
+          <img src={logoBlack} alt="Wander Breeze" style={{ width: '150px' }} />
+        </Link>
+
         {!noMenu && (
           <>
             {/* Desktop Menu */}
@@ -70,8 +97,10 @@ const Header: React.FC<HeaderProps> = ({ onNavigate, noMenu = false }) => {
               {menuItems.map((item) => (
                 <button
                   key={item.section}
-                  onClick={() => onNavigate?.(item.section)}
-                  className="text-gray-700 hover:text-blue-700 font-medium transition-colors duration-200 relative group"
+                  onClick={() => handleNavigation(item.section)}
+                  className={`text-gray-700 hover:text-blue-700 font-medium transition-colors duration-200 relative group ${
+                    activeSection === item.section ? 'text-blue-700' : ''
+                  }`}
                 >
                   {item.label}
                   <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-700 transition-all duration-200 group-hover:w-full"></span>
@@ -94,10 +123,7 @@ const Header: React.FC<HeaderProps> = ({ onNavigate, noMenu = false }) => {
                   {menuItems.map((item) => (
                     <button
                       key={item.section}
-                      onClick={() => {
-                        onNavigate?.(item.section);
-                        setIsMenuOpen(false);
-                      }}
+                      onClick={() => handleNavigation(item.section)}
                       className="text-left py-2 text-gray-700 hover:text-blue-700 font-medium transition-colors duration-200"
                     >
                       {item.label}
