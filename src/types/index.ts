@@ -1,7 +1,7 @@
 export interface Product {
   id: string;
   name: string;
-  category: 'spices' | 'agri-products';
+  category: 'spices' | 'agri-products' | 'value-added';
   image: string;
   hsnCode: string;
   placeOfOrigin: string;
@@ -14,6 +14,7 @@ export interface Product {
   // };
   // paymentTerms: string;
   description?: string;
+  route: string;
 }
 
 export interface Certification {

@@ -2,6 +2,8 @@ import React from 'react';
 import { Product } from '../types';
 import { Plane, Ship, Clock, CreditCard, MapPin, Palette, Star } from 'lucide-react';
 
+import { useNavigate } from "react-router-dom";
+
 interface ProductCardProps {
   product: Product;
 }
@@ -18,6 +20,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         behavior: 'smooth'
       });
     }
+  };
+
+  const navigate = useNavigate();
+
+  const goToProduct = () => {
+    navigate(product.route);
   };
 
   return (
@@ -110,7 +118,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
         {/* Contact for Price Button */}
         <button className="w-full mt-6 bg-gradient-to-r from-blue-700 to-emerald-600 text-white py-3 rounded-lg font-semibold hover:from-blue-800 hover:to-emerald-700 transition-all duration-200 transform hover:scale-105"
-        onClick={() => scrollToSection('contact')}>
+         onClick={goToProduct}>
+          View Details
+        </button>
+        <button className="w-full mt-6 bg-gradient-to-r from-blue-700 to-emerald-600 text-white py-3 rounded-lg font-semibold hover:from-blue-800 hover:to-emerald-700 transition-all duration-200 transform hover:scale-105"
+          onClick={() => scrollToSection('contact')}>
           Contact for Price Quote
         </button>
       </div>

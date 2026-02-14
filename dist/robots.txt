@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /tmp/
+Disallow: /temp/
+Disallow: /search
+Disallow: /*?
+Disallow: /.git/
+
+Sitemap: https://wanderbreezeexim.com/sitemap.xml

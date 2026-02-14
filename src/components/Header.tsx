@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Menu, X } from 'lucide-react';
-import logoBlack from '../../dist/assets/img/wander-breeze-website-logo-black.png';
+import logoBlack from '../../dist/assets/wander-breeze-website-logo-black.png';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 interface HeaderProps {
