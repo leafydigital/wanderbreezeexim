@@ -1,8 +1,86 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Mail, Phone, MapPin, Globe, Facebook, Twitter, Linkedin, Instagram } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
-const Footer: React.FC = () => {
+interface HeaderProps {
+  onNavigate?: (section: string) => void;
+  noMenu?: boolean;
+}
+
+const Footer: React.FC<HeaderProps> = ({ onNavigate, noMenu = false }) => {
+
+  const menuItems = [
+    { label: 'Home', section: 'home' },
+    { label: 'Products', section: 'products' },
+    { label: 'Certifications', section: 'certifications' },
+    { label: 'Payment Terms', section: 'paymentterms' }, // 👈 new page
+    { label: 'Contact', section: 'contact' },
+  ];
+
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState('home');
+
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Scroll spy only on homepage
+  useEffect(() => {
+    if (noMenu) return;
+    if (location.pathname !== '/') return;
+
+    const handleScroll = () => {
+      const sections = ['home', 'products', 'certifications', 'contact'];
+      const scrollPosition = window.scrollY + 100;
+
+      for (const section of sections) {
+        const element = document.getElementById(section);
+        if (element) {
+          const { offsetTop, offsetHeight } = element;
+          if (scrollPosition >= offsetTop && scrollPosition < offsetTop + offsetHeight) {
+            setActiveSection(section);
+            break;
+          }
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [noMenu, location.pathname]);
+
+  // Handle scroll or page navigation
+  const handleNavigation = (section: string) => {
+    setIsMenuOpen(false);
+
+    // If Payment Terms → go to new page
+    if (section === 'paymentterms') {
+      navigate('/payment-terms');
+      return;
+    }
+
+    // If already on homepage → scroll
+    if (location.pathname === '/') {
+      const element = document.getElementById(section);
+      if (element) {
+        const navbarHeight = 80;
+        const targetPosition = element.offsetTop - navbarHeight;
+        window.scrollTo({ top: targetPosition, behavior: 'smooth' });
+      }
+    }
+    // If on another page → first go to homepage, then scroll
+    else {
+      navigate('/');
+      setTimeout(() => {
+        const element = document.getElementById(section);
+        if (element) {
+          const navbarHeight = 80;
+          const targetPosition = element.offsetTop - navbarHeight;
+          window.scrollTo({ top: targetPosition, behavior: 'smooth' });
+        }
+      }, 300);
+    }
+  };
+
   return (
     <footer className="bg-gray-900 text-white py-16">
       <div className="container mx-auto px-4">
@@ -58,7 +136,28 @@ const Footer: React.FC = () => {
           <div>
             <h4 className="text-lg font-semibold mb-6">Quick Links</h4>
             <ul className="space-y-3">
-              <li><a href="#home" className="text-gray-300 hover:text-white transition-colors duration-200">Home</a></li>
+
+              {menuItems.map((item) => (
+
+                <li>
+                  <button className="text-gray-300 hover:text-white transition-colors duration-200"
+                    key={item.section} onClick={() => handleNavigation(item.section)}>
+                    {item.label}
+                  </button>
+                </li>
+
+                // <button
+                //   key={item.section}
+                //   onClick={() => handleNavigation(item.section)}
+                //   className={`text-gray-700 hover:text-blue-700 font-medium transition-colors duration-200 relative group ${activeSection === item.section ? 'text-blue-700' : ''
+                //     }`}
+                // >
+                //   {item.label}
+                //   <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-700 transition-all duration-200 group-hover:w-full"></span>
+                // </button>
+              ))}
+
+              {/* <li><a href="#home" className="text-gray-300 hover:text-white transition-colors duration-200">Home</a></li>
               <li><a href="#products" className="text-gray-300 hover:text-white transition-colors duration-200">Products</a></li>
               <li><a href="#certifications" className="text-gray-300 hover:text-white transition-colors duration-200">Certifications</a></li>
               <li><a href="#contact" className="text-gray-300 hover:text-white transition-colors duration-200">Contact</a></li>
@@ -77,7 +176,7 @@ const Footer: React.FC = () => {
                 >
                   Terms of Service
                 </Link>
-              </li>
+              </li> */}
             </ul>
           </div>
 
