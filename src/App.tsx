@@ -21,6 +21,7 @@ import Cardamom from './pages/Products/Cardamom';
 import Banana from './pages/Products/Banana';
 import BlackPepper from './pages/Products/Pepper';
 import WhatsAppFloat from './components/WhatsAppFloat';
+import ThankYou from './pages/ThankYou';
 
 function HomePage() {
   const sectionRefs = {
@@ -73,6 +74,7 @@ function App() {
         <Route path="/products/pepper" element={<BlackPepper />} />
         <Route path="/products/cardamom" element={<Cardamom />} />
         <Route path="/products/banana" element={<Banana />} />
+        <Route path="/thank-you" element={<ThankYou />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
 
