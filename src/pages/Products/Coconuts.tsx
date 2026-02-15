@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
+import coconutImage from '../../../dist/assets/Coconut.png';
+
 const Coconut = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("home");
@@ -79,7 +81,7 @@ const Coconut = () => {
 
         <div>
           <img
-            src="/dist/assets/coconut.png"
+            src={coconutImage}
             alt="Semi Husked Coconut Export"
             className="rounded-xl shadow-lg"
           />

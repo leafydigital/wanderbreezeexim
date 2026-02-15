@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
+import onionImage from '../../../dist/assets/Onion.png';
+
 const Onion = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("home");
@@ -74,7 +76,7 @@ const Onion = () => {
 
         <div>
           <img
-            src="/dist/assets/Onion.png"
+            src={onionImage}
             alt="Red Onion Export"
             className="rounded-xl shadow-lg"
           />

@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
+import cardamomImage from '../../../dist/assets/Cardamom.png';
+
+
 const Cardamom = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("home");
@@ -74,7 +77,7 @@ const Cardamom = () => {
 
         <div>
           <img
-            src="/dist/assets/cardamom.png"
+            src={cardamomImage}
             alt="Green Cardamom Export"
             className="rounded-xl shadow-lg"
           />
