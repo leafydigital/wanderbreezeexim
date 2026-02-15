@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
+import bananaImage from '../../../dist/assets/Banana.png';
+
 const Banana = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [activeSection, setActiveSection] = useState("home");
@@ -75,7 +77,7 @@ const Banana = () => {
 
                 <div>
                     <img
-                        src="/dist/assets/Banana.png"
+                        src={bananaImage}
                         alt="G9 Banana Export"
                         className="rounded-xl shadow-lg"
                     />

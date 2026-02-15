@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
+import cocoPeatsImage from '../../../dist/assets/coco-peats.png';
+
 const CocoPeats = () => {
 
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -80,7 +82,7 @@ const CocoPeats = () => {
 
                 <div>
                     <img
-                        src="/dist/assets/coco-peats.png"
+                        src={cocoPeatsImage}
                         alt="Coco Peat Export"
                         className="rounded-xl shadow-lg"
                     />

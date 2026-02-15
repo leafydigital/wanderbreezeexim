@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
+import pepperImage from '../../../dist/assets/Pepper.png';
+
 const BlackPepper = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("home");
@@ -74,7 +76,7 @@ const BlackPepper = () => {
 
         <div>
           <img
-            src="/dist/assets/Pepper.png"
+            src={pepperImage}
             alt="Black Pepper Export"
             className="rounded-xl shadow-lg"
           />
