@@ -3,9 +3,9 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 import ContactModal from "../../components/ContactModal";
 
-import cardamomImage from '../../../dist/assets/Cardamom.png';
+import pumpkinImage from '../../../dist/assets/pumpkin.png';
 
-const Cardamom = () => {
+const Pumpkin = () => {
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -14,7 +14,7 @@ const Cardamom = () => {
 
   useEffect(() => {
     document.title =
-      "Green Cardamom Exporter from India | Bulk Cardamom Supplier | Wander Breeze Exim";
+      "Yellow Pumpkin Exporter from India | Bulk Pumpkin Supplier | Wander Breeze Exim";
   }, []);
 
   const handleNavigation = (section: string) => {
@@ -31,20 +31,20 @@ const Cardamom = () => {
 
         <div>
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight">
-            Green Cardamom Exporter from India
+            Yellow Pumpkin Exporter from India
           </h1>
 
           <p className="mt-6 text-lg text-gray-600">
-            Premium export quality green cardamom sourced from top plantations in India.
-            Carefully graded, cleaned, and packed to meet international spice standards.
+            Premium export quality yellow pumpkins sourced directly from farms in India.
+            Carefully graded and packed to meet international export standards.
           </p>
 
           <ul className="mt-8 space-y-3 text-gray-700">
-            <li>✔ Premium Export Grade</li>
-            <li>✔ Strong Aroma & Natural Flavor</li>
-            <li>✔ Machine Cleaned & Graded</li>
-            <li>✔ Low Moisture Content</li>
-            <li>✔ Bulk & Private Label Supply</li>
+            <li>✔ Premium Export Grade (A Grade)</li>
+            <li>✔ Uniform Size & Bright Color</li>
+            <li>✔ Long Shelf Life (45–60 Days)</li>
+            <li>✔ Bulk Export Supply Available</li>
+            <li>✔ Direct Farm Sourcing</li>
           </ul>
 
           <div className="mt-10 flex gap-4">
@@ -59,8 +59,8 @@ const Cardamom = () => {
 
         <div>
           <img
-            src={cardamomImage}
-            alt="Green Cardamom Export from India"
+            src={pumpkinImage}
+            alt="Yellow Pumpkin Export from India"
             className="rounded-xl shadow-lg"
           />
         </div>
@@ -78,12 +78,12 @@ const Cardamom = () => {
 
           <div className="p-6 shadow rounded-xl">
             <h4 className="font-semibold text-blue-600">Minimum Order</h4>
-            <p className="mt-2 text-gray-600">100 Kg / Bulk Orders</p>
+            <p className="mt-2 text-gray-600">1 x 40ft Container</p>
           </div>
 
           <div className="p-6 shadow rounded-xl">
             <h4 className="font-semibold text-blue-600">Supply Capacity</h4>
-            <p className="mt-2 text-gray-600">Large Volume Supply Available</p>
+            <p className="mt-2 text-gray-600">50+ Containers / Month</p>
           </div>
 
         </div>
@@ -94,14 +94,13 @@ const Cardamom = () => {
         <div className="max-w-5xl mx-auto text-center">
 
           <h2 className="text-3xl font-bold text-gray-900">
-            Export Quality Green Cardamom
+            Export Quality Yellow Pumpkin
           </h2>
 
           <p className="mt-6 text-gray-600 leading-relaxed">
-            Known as the "Queen of Spices", Indian green cardamom is highly valued
-            for its rich aroma, strong flavor, and medicinal properties.
-            Our cardamom is carefully sorted and graded to ensure premium
-            export quality for global spice markets.
+            Our yellow pumpkins are known for their vibrant color, smooth texture,
+            and natural sweetness. Harvested at optimal maturity, they are ideal
+            for international markets including the Middle East, Europe, and Asia.
           </p>
 
         </div>
@@ -112,20 +111,20 @@ const Cardamom = () => {
         <div className="max-w-6xl mx-auto">
 
           <h2 className="text-3xl font-bold text-center text-gray-900">
-            Technical Specifications – Export Grade Cardamom
+            Technical Specifications – Export Grade Pumpkin
           </h2>
 
           <div className="mt-12 grid md:grid-cols-2 gap-6">
 
             {[
-              ["Type", "Whole Green Cardamom"],
-              ["Moisture", "< 10%"],
-              ["Size Grades", "6mm / 7mm / 8mm"],
-              ["Color", "Natural Green"],
-              ["Admixture", "< 1%"],
-              ["Packaging", "5kg / 25kg Export Bags"],
-              ["Grade", "Premium Export Quality"],
-              ["Shelf Life", "12 – 18 Months"],
+              ["Type", "Fresh Yellow Pumpkin"],
+              ["Weight", "2kg – 8kg"],
+              ["Color", "Bright Yellow / Orange"],
+              ["Shape", "Round / Oval"],
+              ["Shelf Life", "45 – 60 Days"],
+              ["Packaging", "Net Bags / Carton Packaging"],
+              ["Grade", "Premium Export Quality (A Grade)"],
+              ["Container Capacity", "18 – 22 MT (40ft)"],
             ].map(([label, value]) => (
               <div
                 key={label}
@@ -154,12 +153,13 @@ const Cardamom = () => {
 
             <div className="grid md:grid-cols-2 gap-6 text-lg">
 
-              <div>Loading Ports: Cochin / Tuticorin</div>
+              <div>Loading Ports: Nhava Sheva / Tuticorin / Chennai / Cochin</div>
               <div>Container Type: 20’ / 40’ Container</div>
-              <div>Capacity: 8 – 12 MT per container</div>
-              <div>Vacuum Packaging Available</div>
-              <div>Private Label Packaging Available</div>
-              <div>Fumigation Available</div>
+              <div>Capacity: 18 – 22 MT (40ft)</div>
+              <div>Packaging: Loose / Net / Carton</div>
+              <div>Private Label Packaging: Available</div>
+              <div>Fumigation & Phytosanitary: Available</div>
+              <div>Pre-cooling Before Shipment: Available</div>
 
             </div>
 
@@ -183,7 +183,7 @@ const Cardamom = () => {
           </h2>
 
           <ul className="mt-8 space-y-3 text-gray-700">
-            <li>✔ Direct Sourcing from Plantations</li>
+            <li>✔ Direct Farm Sourcing</li>
             <li>✔ Competitive Export Pricing</li>
             <li>✔ Reliable Supply Chain</li>
             <li>✔ Export Documentation Support</li>
@@ -198,7 +198,7 @@ const Cardamom = () => {
       <section className="py-20 px-6 text-center bg-gradient-to-r from-green-600 to-blue-600 text-white">
 
         <h2 className="text-3xl font-bold">
-          Looking for Bulk Cardamom Supplier from India?
+          Looking for Bulk Pumpkin Supplier from India?
         </h2>
 
         <p className="mt-4 text-lg">
@@ -220,11 +220,11 @@ const Cardamom = () => {
       <ContactModal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
-        product="Green Cardamom"
+        product="Yellow Pumpkin"
       />
 
     </div>
   );
 };
 
-export default Cardamom;
+export default Pumpkin;

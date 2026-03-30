@@ -1,99 +1,98 @@
 import React from "react";
+import { FileText, CheckCircle, CreditCard  } from "lucide-react";
+
+const paymentData = [
+  {
+    title: "Payment Terms for New Buyers",
+    items: [
+      "70% Advance Payment at order confirmation",
+      "30% Balance Payment against Bill of Lading (BL) copy"
+    ]
+  },
+  {
+    title: "Payment Terms for Returning Buyers",
+    items: [
+      "50% Advance Payment at order confirmation",
+      "50% Balance Payment against Bill of Lading (BL) copy"
+    ]
+  },
+  {
+    title: "High Value Order Policy",
+    description: "For orders above $50,000 USD:",
+    items: [
+      "Payment terms may be mutually discussed based on order size",
+      "Flexible structures available for long-term partners"
+    ]
+  },
+  {
+    title: "Credit Facility",
+    description:
+      "Credit terms may be offered to trusted long-term buyers based on business relationship and transaction history. Approval is subject to internal evaluation."
+  }
+];
 
 const PaymentTerms: React.FC = () => {
   return (
-    <section className="bg-gray-50 py-16">
-      <div className="max-w-6xl mx-auto px-6">
+    <section id="paymentterms" className="py-20 bg-gray-50">
+      <div className="container mx-auto px-4">
 
-        {/* Page Header */}
+        {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-3xl font-bold text-gray-800">
-            Payment Terms & Trade Policy
-          </h1>
-          <p className="text-gray-600 mt-3 max-w-2xl mx-auto">
-            At Wander Breeze Exim, we follow transparent and secure payment
-            practices to build strong long-term relationships with our
-            international buyers.
+          <div className="flex justify-center mb-4">
+            <CreditCard  className="text-blue-700" size={48} />
+          </div>
+          <h2 className="text-4xl font-bold text-gray-800 mb-4">
+            Payment Terms & <span className="text-blue-700">Trade Policy</span>
+          </h2>
+          <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+            We follow transparent, secure, and flexible payment practices to build
+            long-term partnerships with our international buyers.
           </p>
         </div>
 
-        {/* Content Grid */}
-        <div className="grid md:grid-cols-2 gap-8">
+        {/* Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
 
-          {/* New Buyers */}
-          <div className="bg-white p-6 rounded-xl shadow-md">
-            <h2 className="text-xl font-semibold mb-3 text-blue-700">
-              Payment Terms for New Buyers
-            </h2>
-            <ul className="list-disc ml-5 text-gray-700 space-y-2">
-              <li>75% Advance Payment at order confirmation</li>
-              <li>25% Balance Payment against Bill of Lading (BL) copy</li>
-            </ul>
-          </div>
+          {paymentData.map((item, index) => (
+            <div
+              key={index}
+              className="bg-white p-6 rounded-xl border border-gray-200 hover:shadow-lg transition-all"
+            >
+              <div className="flex items-start space-x-4">
+                <div className="bg-blue-100 p-3 rounded-lg">
+                  <FileText className="text-blue-700" size={24} />
+                </div>
 
-          {/* Returning Buyers */}
-          <div className="bg-white p-6 rounded-xl shadow-md">
-            <h2 className="text-xl font-semibold mb-3 text-blue-700">
-              Payment Terms for Returning Buyers
-            </h2>
-            <ul className="list-disc ml-5 text-gray-700 space-y-2">
-              <li>50% Advance Payment at order confirmation</li>
-              <li>50% Balance Payment against Bill of Lading (BL) copy</li>
-            </ul>
-          </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800">
+                    {item.title}
+                  </h3>
 
-          {/* High Value Orders */}
-          <div className="bg-white p-6 rounded-xl shadow-md">
-            <h2 className="text-xl font-semibold mb-3 text-blue-700">
-              High Value Order Policy
-            </h2>
-            <p className="text-gray-700 mb-2">
-              For orders above <strong>₹50 Lakhs INR</strong>:
-            </p>
-            <ul className="list-disc ml-5 text-gray-700 space-y-2">
-              <li>75% Advance Payment is mandatory</li>
-              <li>25% Balance Payment against BL copy</li>
-            </ul>
-          </div>
+                  {item.description && (
+                    <p className="text-sm text-gray-600 mt-2">
+                      {item.description}
+                    </p>
+                  )}
 
-          {/* Credit Facility */}
-          <div className="bg-white p-6 rounded-xl shadow-md">
-            <h2 className="text-xl font-semibold mb-3 text-blue-700">
-              Credit Facility
-            </h2>
-            <p className="text-gray-700">
-              Trusted long-term buyers may be eligible for a 100% credit
-              payment option after relationship evaluation. Eligibility will
-              be communicated by our team.
-            </p>
-          </div>
+                  {item.items && (
+                    <ul className="mt-3 space-y-2">
+                      {item.items.map((point, idx) => (
+                        <li key={idx} className="flex items-start space-x-2">
+                          <CheckCircle size={16} className="text-green-600 mt-1" />
+                          <span className="text-sm text-gray-700">{point}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
 
-          {/* Shipping */}
-          <div className="bg-white p-6 rounded-xl shadow-md md:col-span-2">
-            <h2 className="text-xl font-semibold mb-3 text-blue-700">
-              Shipping & Transport Policy
-            </h2>
-            <ul className="list-disc ml-5 text-gray-700 space-y-2">
-              <li>Preferred mode of shipment: Sea Freight</li>
-              <li>
-                If Air Freight is requested, additional transport charges will
-                be added to the product invoice
-              </li>
-              <li>
-                Packing and export documentation charges are included as per
-                quotation
-              </li>
-            </ul>
-          </div>
+                  <span className="inline-block mt-3 text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+                    Flexible Terms
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
 
-        </div>
-
-        {/* Closing Note */}
-        <div className="text-center mt-10">
-          <p className="text-gray-700">
-            For any clarification regarding payment or shipping terms, feel
-            free to contact our team. We are happy to assist you.
-          </p>
         </div>
 
       </div>

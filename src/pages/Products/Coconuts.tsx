@@ -1,62 +1,42 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
+import ContactModal from "../../components/ContactModal";
+
 import coconutImage from '../../../dist/assets/Coconut.png';
 
 const Coconut = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState("home");
 
   const location = useLocation();
   const navigate = useNavigate();
 
+  const [showModal, setShowModal] = useState(false);
+
   useEffect(() => {
     document.title =
-      "Semi Husked Coconut Exporter from India | Wander Breeze Exim";
+      "Semi Husked Coconut Exporter from India | Bulk Coconut Supplier | Wander Breeze Exim";
   }, []);
 
-  // Handle scroll or page navigation
   const handleNavigation = (section: string) => {
-    setIsMenuOpen(false);
-
-    if (section === "paymentterms") {
-      navigate("/payment-terms");
-      return;
-    }
-
-    if (location.pathname === "/") {
-      const element = document.getElementById(section);
-      if (element) {
-        const navbarHeight = 80;
-        const targetPosition = element.offsetTop - navbarHeight;
-        window.scrollTo({ top: targetPosition, behavior: "smooth" });
-      }
-    } else {
-      navigate("/");
-      setTimeout(() => {
-        const element = document.getElementById(section);
-        if (element) {
-          const navbarHeight = 80;
-          const targetPosition = element.offsetTop - navbarHeight;
-          window.scrollTo({ top: targetPosition, behavior: "smooth" });
-        }
-      }, 300);
+    if (section === "contact") {
+      navigate("/#contact");
     }
   };
 
   return (
     <div className="bg-gray-50">
 
-      {/* ================= HERO SECTION ================= */}
+      {/* ================= HERO ================= */}
       <section className="max-w-7xl mx-auto px-6 py-20 grid md:grid-cols-2 gap-16 items-center">
+
         <div>
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight">
-            Semi Husked Coconut – Export Grade
+            Semi Husked Coconut Exporter from India
           </h1>
 
           <p className="mt-6 text-lg text-gray-600">
-            Premium quality semi-husked coconuts sourced directly from
-            Pollachi farms, ideal for international export markets.
+            Premium export quality semi husked coconuts sourced from Pollachi farms,
+            known for their long shelf life and consistent quality.
           </p>
 
           <ul className="mt-8 space-y-3 text-gray-700">
@@ -68,58 +48,83 @@ const Coconut = () => {
           </ul>
 
           <div className="mt-10 flex gap-4">
-            <button className="bg-gradient-to-r from-green-600 to-blue-600 text-white px-6 py-3 rounded-lg shadow-md hover:opacity-90 transition" 
-             onClick={() => handleNavigation("contact")}>
-              Request Container Pricing
+            <button
+              className="bg-gradient-to-r from-green-600 to-blue-600 text-white px-6 py-3 rounded-lg shadow-md hover:opacity-90 transition"
+              onClick={() => setShowModal(true)}
+            >
+              Request Latest Price
             </button>
-
-            {/* <button className="border border-blue-600 text-blue-600 px-6 py-3 rounded-lg hover:bg-blue-50 transition">
-              Download Product Specification
-            </button> */}
           </div>
         </div>
 
         <div>
           <img
             src={coconutImage}
-            alt="Semi Husked Coconut Export"
+            alt="Semi Husked Coconut Export from India"
             className="rounded-xl shadow-lg"
           />
         </div>
+
       </section>
 
-      {/* ================= OVERVIEW ================= */}
-      <section className="py-20 px-6 bg-white">
-        <div className="max-w-5xl mx-auto text-center">
-          <h2 className="text-3xl font-bold text-gray-900">
-            Product Overview
-          </h2>
+      {/* ================= QUICK INFO ================= */}
+      <section className="py-16 px-6 bg-white">
+        <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-6 text-center">
 
-          <p className="mt-6 text-gray-600 leading-relaxed">
-            Our semi-husked coconuts are carefully selected from premium
-            farms in Pollachi, India. Each nut is fully matured and processed
-            under strict quality inspection to ensure long shelf life and
-            consistent export-grade quality suitable for global markets.
-          </p>
+          <div className="p-6 shadow rounded-xl">
+            <h4 className="font-semibold text-blue-600">Origin</h4>
+            <p className="mt-2 text-gray-600">Pollachi, India</p>
+          </div>
+
+          <div className="p-6 shadow rounded-xl">
+            <h4 className="font-semibold text-blue-600">Minimum Order</h4>
+            <p className="mt-2 text-gray-600">1 x 40ft Container</p>
+          </div>
+
+          <div className="p-6 shadow rounded-xl">
+            <h4 className="font-semibold text-blue-600">Supply Capacity</h4>
+            <p className="mt-2 text-gray-600">High Volume Supply Available</p>
+          </div>
+
         </div>
       </section>
 
-      {/* ================= TECHNICAL SPECIFICATIONS ================= */}
+      {/* ================= PRODUCT OVERVIEW ================= */}
+      <section className="py-20 px-6 bg-white">
+        <div className="max-w-5xl mx-auto text-center">
+
+          <h2 className="text-3xl font-bold text-gray-900">
+            Export Quality Semi Husked Coconut
+          </h2>
+
+          <p className="mt-6 text-gray-600 leading-relaxed">
+            Our semi-husked coconuts are carefully selected from premium farms in Pollachi,
+            ensuring high maturity, longer shelf life, and excellent export quality.
+            Suitable for international wholesale and retail markets.
+          </p>
+
+        </div>
+      </section>
+
+      {/* ================= TECH SPECS ================= */}
       <section className="py-20 px-6">
         <div className="max-w-6xl mx-auto">
+
           <h2 className="text-3xl font-bold text-center text-gray-900">
-            Technical Specifications
+            Technical Specifications – Export Grade Coconut
           </h2>
 
           <div className="mt-12 grid md:grid-cols-2 gap-6">
+
             {[
               ["Type", "Semi Husked Coconut"],
               ["Origin", "Pollachi, India"],
-              ["Weight Range", "500g – 800g (Customizable)"],
+              ["Weight Range", "500g – 800g"],
               ["Shelf Life", "45 – 60 Days"],
               ["Maturity", "Fully Matured"],
-              ["Packaging", "13kg / 12.5kg Bags"],
-              ["Container Capacity", "25,000 – 26,000 Nuts (40’HC)"],
+              ["Packaging", "12.5kg / 13kg Bags"],
+              ["Grade", "Premium Export Quality"],
+              ["Container Capacity", "25,000 – 26,000 Nuts"],
             ].map(([label, value]) => (
               <div
                 key={label}
@@ -131,50 +136,91 @@ const Coconut = () => {
                 <p className="mt-2 text-gray-600">{value}</p>
               </div>
             ))}
+
           </div>
         </div>
       </section>
 
-      {/* ================= PACKAGING & LOADING ================= */}
+      {/* ================= PACKAGING ================= */}
       <section className="py-20 px-6">
         <div className="max-w-6xl mx-auto">
+
           <h2 className="text-3xl font-bold text-center text-gray-900">
-            Export Packaging & Container Loading
+            Export Packaging & Container Loading Details
           </h2>
 
           <div className="mt-12 bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-2xl p-10 shadow-lg">
+
             <div className="grid md:grid-cols-2 gap-6 text-lg">
-              <div>Loading Port: Cochin / Tuticorin / Chennai</div>
+
+              <div>Loading Ports: Cochin / Tuticorin / Chennai</div>
               <div>Container Type: 40’ High Cube</div>
-              <div>Approx 24 – 26 MT per container</div>
-              <div>25,000 – 26,000 nuts per container</div>
-              <div>Packed in Gunny / PP Bags</div>
+              <div>Capacity: 25,000 – 26,000 Nuts</div>
+              <div>Weight: 24 – 26 MT</div>
+              <div>Packing: Gunny / PP Bags</div>
               <div>Custom Branding Available</div>
+
             </div>
+
+            <div className="mt-8 text-center">
+              <p className="text-yellow-200 font-semibold">
+                ⚠️ Limited Weekly Export Slots – Contact Early to Reserve Shipment
+              </p>
+            </div>
+
           </div>
         </div>
+      </section>
+
+      {/* ================= WHY CHOOSE US ================= */}
+      <section className="py-20 px-6 bg-white">
+
+        <div className="max-w-5xl mx-auto text-center">
+
+          <h2 className="text-3xl font-bold text-gray-900">
+            Why Choose Wander Breeze Exim?
+          </h2>
+
+          <ul className="mt-8 space-y-3 text-gray-700">
+            <li>✔ Direct Farm Sourcing</li>
+            <li>✔ Competitive Export Pricing</li>
+            <li>✔ Reliable Supply Chain</li>
+            <li>✔ Export Documentation Support</li>
+            <li>✔ Fast Buyer Response</li>
+          </ul>
+
+        </div>
+
       </section>
 
       {/* ================= FINAL CTA ================= */}
       <section className="py-20 px-6 text-center bg-gradient-to-r from-green-600 to-blue-600 text-white">
+
         <h2 className="text-3xl font-bold">
-          Looking for Reliable Coconut Exporter from India?
+          Looking for Bulk Coconut Supplier from India?
         </h2>
 
         <p className="mt-4 text-lg">
-          Contact Wander Breeze Exim for competitive pricing and
-          consistent bulk supply.
+          Get the latest export pricing and secure your shipment today.
         </p>
 
         <div className="mt-8 flex justify-center gap-4">
           <button
             className="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition"
-            onClick={() => handleNavigation("contact")}
+            onClick={() => setShowModal(true)}
           >
-            Request Price
+            Request Price Now
           </button>
         </div>
+
       </section>
+
+      {/* ✅ MODAL */}
+      <ContactModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        product="Coconut"
+      />
 
     </div>
   );

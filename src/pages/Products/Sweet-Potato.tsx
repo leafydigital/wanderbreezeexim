@@ -3,9 +3,9 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 import ContactModal from "../../components/ContactModal";
 
-import cardamomImage from '../../../dist/assets/Cardamom.png';
+import sweetPotatoImage from '../../../dist/assets/Sweetpotato.png';
 
-const Cardamom = () => {
+const SweetPotato = () => {
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -14,7 +14,7 @@ const Cardamom = () => {
 
   useEffect(() => {
     document.title =
-      "Green Cardamom Exporter from India | Bulk Cardamom Supplier | Wander Breeze Exim";
+      "Sweet Potato Exporter from India | Bulk Supplier | Wander Breeze Exim";
   }, []);
 
   const handleNavigation = (section: string) => {
@@ -31,20 +31,20 @@ const Cardamom = () => {
 
         <div>
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight">
-            Green Cardamom Exporter from India
+            Sweet Potato Exporter from India
           </h1>
 
           <p className="mt-6 text-lg text-gray-600">
-            Premium export quality green cardamom sourced from top plantations in India.
-            Carefully graded, cleaned, and packed to meet international spice standards.
+            Premium export quality sweet potatoes sourced directly from farms in India,
+            known for their natural sweetness, smooth texture, and rich nutrition.
           </p>
 
           <ul className="mt-8 space-y-3 text-gray-700">
-            <li>✔ Premium Export Grade</li>
-            <li>✔ Strong Aroma & Natural Flavor</li>
-            <li>✔ Machine Cleaned & Graded</li>
-            <li>✔ Low Moisture Content</li>
-            <li>✔ Bulk & Private Label Supply</li>
+            <li>✔ Uniform Size & Smooth Skin</li>
+            <li>✔ Rich Orange Flesh</li>
+            <li>✔ Naturally Sweet Taste</li>
+            <li>✔ Good Shelf Life</li>
+            <li>✔ Bulk Export Supply Available</li>
           </ul>
 
           <div className="mt-10 flex gap-4">
@@ -59,8 +59,8 @@ const Cardamom = () => {
 
         <div>
           <img
-            src={cardamomImage}
-            alt="Green Cardamom Export from India"
+            src={sweetPotatoImage}
+            alt="Sweet Potato Export from India"
             className="rounded-xl shadow-lg"
           />
         </div>
@@ -78,12 +78,12 @@ const Cardamom = () => {
 
           <div className="p-6 shadow rounded-xl">
             <h4 className="font-semibold text-blue-600">Minimum Order</h4>
-            <p className="mt-2 text-gray-600">100 Kg / Bulk Orders</p>
+            <p className="mt-2 text-gray-600">1 x 40ft Container</p>
           </div>
 
           <div className="p-6 shadow rounded-xl">
             <h4 className="font-semibold text-blue-600">Supply Capacity</h4>
-            <p className="mt-2 text-gray-600">Large Volume Supply Available</p>
+            <p className="mt-2 text-gray-600">High Volume Supply Available</p>
           </div>
 
         </div>
@@ -94,14 +94,13 @@ const Cardamom = () => {
         <div className="max-w-5xl mx-auto text-center">
 
           <h2 className="text-3xl font-bold text-gray-900">
-            Export Quality Green Cardamom
+            Export Quality Sweet Potato
           </h2>
 
           <p className="mt-6 text-gray-600 leading-relaxed">
-            Known as the "Queen of Spices", Indian green cardamom is highly valued
-            for its rich aroma, strong flavor, and medicinal properties.
-            Our cardamom is carefully sorted and graded to ensure premium
-            export quality for global spice markets.
+            Indian sweet potatoes are widely appreciated for their nutritional value,
+            natural sweetness, and vibrant orange flesh. Carefully selected and packed
+            to ensure freshness and quality for international export markets.
           </p>
 
         </div>
@@ -112,20 +111,20 @@ const Cardamom = () => {
         <div className="max-w-6xl mx-auto">
 
           <h2 className="text-3xl font-bold text-center text-gray-900">
-            Technical Specifications – Export Grade Cardamom
+            Technical Specifications – Export Grade Sweet Potato
           </h2>
 
           <div className="mt-12 grid md:grid-cols-2 gap-6">
 
             {[
-              ["Type", "Whole Green Cardamom"],
-              ["Moisture", "< 10%"],
-              ["Size Grades", "6mm / 7mm / 8mm"],
-              ["Color", "Natural Green"],
-              ["Admixture", "< 1%"],
-              ["Packaging", "5kg / 25kg Export Bags"],
+              ["Type", "Fresh Sweet Potato"],
+              ["Size", "Medium to Large"],
+              ["Color", "Reddish Skin with Orange Flesh"],
+              ["Shelf Life", "2 – 4 Weeks"],
+              ["Moisture", "< 80%"],
+              ["Packaging", "5kg / 10kg / 25kg Bags"],
               ["Grade", "Premium Export Quality"],
-              ["Shelf Life", "12 – 18 Months"],
+              ["Container Capacity", "28 – 30 MT (40ft)"],
             ].map(([label, value]) => (
               <div
                 key={label}
@@ -154,12 +153,12 @@ const Cardamom = () => {
 
             <div className="grid md:grid-cols-2 gap-6 text-lg">
 
-              <div>Loading Ports: Cochin / Tuticorin</div>
+              <div>Loading Ports: Nhava Sheva / Tuticorin / Chennai / Cochin</div>
               <div>Container Type: 20’ / 40’ Container</div>
-              <div>Capacity: 8 – 12 MT per container</div>
-              <div>Vacuum Packaging Available</div>
+              <div>Capacity: 28 – 30 MT (40ft)</div>
+              <div>Packaging: Mesh / Jute Bags</div>
               <div>Private Label Packaging Available</div>
-              <div>Fumigation Available</div>
+              <div>Fumigation & Phytosanitary Certificate Available</div>
 
             </div>
 
@@ -183,7 +182,7 @@ const Cardamom = () => {
           </h2>
 
           <ul className="mt-8 space-y-3 text-gray-700">
-            <li>✔ Direct Sourcing from Plantations</li>
+            <li>✔ Direct Farm Sourcing</li>
             <li>✔ Competitive Export Pricing</li>
             <li>✔ Reliable Supply Chain</li>
             <li>✔ Export Documentation Support</li>
@@ -198,7 +197,7 @@ const Cardamom = () => {
       <section className="py-20 px-6 text-center bg-gradient-to-r from-green-600 to-blue-600 text-white">
 
         <h2 className="text-3xl font-bold">
-          Looking for Bulk Cardamom Supplier from India?
+          Looking for Bulk Sweet Potato Supplier from India?
         </h2>
 
         <p className="mt-4 text-lg">
@@ -220,11 +219,11 @@ const Cardamom = () => {
       <ContactModal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
-        product="Green Cardamom"
+        product="Sweet Potato"
       />
 
     </div>
   );
 };
 
-export default Cardamom;
+export default SweetPotato;
