@@ -14,6 +14,8 @@ import onion from '../../dist/assets/Onion.png';
 import coconut from '../../dist/assets/Coconut.png';
 import banana from '../../dist/assets/Banana.png';
 import cocopeat from '../../dist/assets/coco-peats.png';
+import sweetpotato from '../../dist/assets/Sweetpotato.png';
+import yellowpumpkin from '../../dist/assets/Pumpkin.png';
 
 export const products: Product[] = [
 
@@ -167,30 +169,57 @@ export const products: Product[] = [
     description: 'Mature fresh coconuts suitable for international export',
     route:"/products/coconuts"
   },
-  // COCONUT
+  // BANANA
   {
     id: 'banana',
     name: 'Banana - G9',
     category: 'agri-products',
     image: banana,
-    hsnCode: '0803.90',
+    hsnCode: '0803.90.10',
     placeOfOrigin: 'India',
     color: 'Natural Green',
     grade: '5 finger - 20 cm length minimum',
     description: 'Fresh harvested bananas with export quality',
     route:"/products/banana"
   },
+  //  // COCO-PEAT
+  // {
+  //   id: 'coco-peat',
+  //   name: 'Coco Peats',
+  //   category: 'value-added',
+  //   image: cocopeat,
+  //   hsnCode: '5305.00.40',
+  //   placeOfOrigin: 'India',
+  //   color: 'Natural Brown',
+  //   grade: 'Variants Available: 5kg / 650g / Grow Bags',
+  //   description: 'Premium Export Grade Coco Peat Blocks – Ideal for Hydroponics, Greenhouse & Horticulture Applications.',
+  //   route:"/products/coco-peats"
+  // },
+  // SWEET-POTATO
   {
-    id: 'coco-peat',
-    name: 'Coco Peats',
-    category: 'value-added',
-    image: cocopeat,
-    hsnCode: '5305.00',
+    id: 'sweet-potato',
+    name: 'Sweet Potato',
+    category: 'agri-products',
+    image: sweetpotato,
+    hsnCode: '0714.20.00',
     placeOfOrigin: 'India',
-    color: 'Natural Brown',
-    grade: 'Variants Available: 5kg / 650g / Grow Bags',
-    description: 'Premium Export Grade Coco Peat Blocks – Ideal for Hydroponics, Greenhouse & Horticulture Applications.',
-    route:"/products/coco-peats"
-  }
+    color: 'Reddish-brown skin with vibrant orange flesh',
+    grade: 'A Grade / Export Quality / Uniform Size',
+    description: 'Premium quality fresh sweet potatoes suitable for international export with rich taste and high nutritional value.',
+    route:"/products/sweet-potato"
+  }//,
+  // YELLOW-PUMPKIN
+  // {
+  //   id: 'yellow-pumpkin',
+  //   name: 'Yellow Pumpkin',
+  //   category: 'agri-products',
+  //   image: yellowpumpkin,
+  //   hsnCode: '0709.93.10',
+  //   placeOfOrigin: 'India',
+  //   color: 'Golden yellow exterior with rich orange-yellow flesh',
+  //   grade: 'A Grade / Matured / Export Quality',
+  //   description: 'High quality fresh yellow pumpkins suitable for international export, known for their freshness and natural sweetness.',
+  //   route:"/products/yellow-pumpkin"
+  // }
 
 ];

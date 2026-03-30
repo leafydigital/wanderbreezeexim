@@ -1,75 +1,58 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
+import ContactModal from "../../components/ContactModal";
+
 import pepperImage from '../../../dist/assets/Pepper.png';
 
 const BlackPepper = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState("home");
 
   const location = useLocation();
   const navigate = useNavigate();
 
+  const [showModal, setShowModal] = useState(false);
+
   useEffect(() => {
     document.title =
-      "Black Pepper Exporter from India | Wander Breeze Exim";
+      "Black Pepper Exporter from India | Bulk Pepper Supplier | Wander Breeze Exim";
   }, []);
 
   const handleNavigation = (section: string) => {
-    setIsMenuOpen(false);
-
-    if (section === "paymentterms") {
-      navigate("/payment-terms");
-      return;
-    }
-
-    if (location.pathname === "/") {
-      const element = document.getElementById(section);
-      if (element) {
-        const navbarHeight = 80;
-        const targetPosition = element.offsetTop - navbarHeight;
-        window.scrollTo({ top: targetPosition, behavior: "smooth" });
-      }
-    } else {
-      navigate("/");
-      setTimeout(() => {
-        const element = document.getElementById(section);
-        if (element) {
-          const navbarHeight = 80;
-          const targetPosition = element.offsetTop - navbarHeight;
-          window.scrollTo({ top: targetPosition, behavior: "smooth" });
-        }
-      }, 300);
+    if (section === "contact") {
+      navigate("/#contact");
     }
   };
 
   return (
     <div className="bg-gray-50">
 
-      {/* ================= HERO SECTION ================= */}
+      {/* ================= HERO ================= */}
       <section className="max-w-7xl mx-auto px-6 py-20 grid md:grid-cols-2 gap-16 items-center">
+
         <div>
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight">
-            Black Pepper – Premium Export Grade
+            Black Pepper Exporter from India
           </h1>
 
           <p className="mt-6 text-lg text-gray-600">
-            High-quality Indian black pepper sourced from premium farms,
-            carefully cleaned and graded to meet international export standards.
+            Premium export quality black pepper sourced from top farms in India,
+            known for its strong aroma, high piperine content, and superior quality.
           </p>
 
           <ul className="mt-8 space-y-3 text-gray-700">
             <li>✔ High Piperine Content</li>
             <li>✔ Machine Cleaned & Graded</li>
             <li>✔ Bold & Uniform Size</li>
-            <li>✔ Low Moisture</li>
-            <li>✔ Bulk & Private Label Supply Available</li>
+            <li>✔ Low Moisture Content</li>
+            <li>✔ Bulk & Private Label Supply</li>
           </ul>
 
           <div className="mt-10 flex gap-4">
-            <button className="bg-gradient-to-r from-green-600 to-blue-600 text-white px-6 py-3 rounded-lg shadow-md hover:opacity-90 transition"
-              onClick={() => handleNavigation("contact")}>
-              Request Container Pricing
+            <button
+              className="bg-gradient-to-r from-green-600 to-blue-600 text-white px-6 py-3 rounded-lg shadow-md hover:opacity-90 transition"
+              onClick={() => setShowModal(true)}
+            >
+              Request Latest Price
             </button>
           </div>
         </div>
@@ -77,44 +60,71 @@ const BlackPepper = () => {
         <div>
           <img
             src={pepperImage}
-            alt="Black Pepper Export"
+            alt="Black Pepper Export from India"
             className="rounded-xl shadow-lg"
           />
+        </div>
+
+      </section>
+
+      {/* ================= QUICK INFO ================= */}
+      <section className="py-16 px-6 bg-white">
+        <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-6 text-center">
+
+          <div className="p-6 shadow rounded-xl">
+            <h4 className="font-semibold text-blue-600">Origin</h4>
+            <p className="mt-2 text-gray-600">India</p>
+          </div>
+
+          <div className="p-6 shadow rounded-xl">
+            <h4 className="font-semibold text-blue-600">Minimum Order</h4>
+            <p className="mt-2 text-gray-600">100 Kg / Bulk Orders</p>
+          </div>
+
+          <div className="p-6 shadow rounded-xl">
+            <h4 className="font-semibold text-blue-600">Supply Capacity</h4>
+            <p className="mt-2 text-gray-600">High Volume Supply Available</p>
+          </div>
+
         </div>
       </section>
 
       {/* ================= PRODUCT OVERVIEW ================= */}
       <section className="py-20 px-6 bg-white">
         <div className="max-w-5xl mx-auto text-center">
+
           <h2 className="text-3xl font-bold text-gray-900">
-            Product Overview
+            Export Quality Black Pepper
           </h2>
 
           <p className="mt-6 text-gray-600 leading-relaxed">
-            Indian Black Pepper is globally known for its strong aroma,
-            high pungency and superior piperine content. Our pepper is
-            carefully processed, cleaned and graded to ensure consistency,
-            purity and export-grade quality suitable for international spice markets.
+            Indian black pepper is globally renowned for its pungency,
+            strong aroma, and high piperine content. Our pepper is carefully
+            cleaned, graded, and packed to meet international export standards.
           </p>
+
         </div>
       </section>
 
-      {/* ================= TECHNICAL SPECIFICATIONS ================= */}
+      {/* ================= TECH SPECS ================= */}
       <section className="py-20 px-6">
         <div className="max-w-6xl mx-auto">
+
           <h2 className="text-3xl font-bold text-center text-gray-900">
-            Technical Specifications
+            Technical Specifications – Export Grade Black Pepper
           </h2>
 
           <div className="mt-12 grid md:grid-cols-2 gap-6">
+
             {[
-              ["Origin", "India"],
               ["Type", "Whole Black Pepper"],
               ["Moisture", "< 12%"],
               ["Piperine Content", "5% – 7%"],
               ["Density", "550 – 580 GL"],
               ["Admixture", "< 1%"],
-              ["Packaging", "25kg / 50kg PP or Jute Bags"],
+              ["Packaging", "25kg / 50kg Bags"],
+              ["Grade", "Premium Export Quality"],
+              ["Shelf Life", "12 – 18 Months"],
             ].map(([label, value]) => (
               <div
                 key={label}
@@ -126,65 +136,91 @@ const BlackPepper = () => {
                 <p className="mt-2 text-gray-600">{value}</p>
               </div>
             ))}
+
           </div>
         </div>
       </section>
 
-      {/* ================= PACKAGING & LOADING ================= */}
+      {/* ================= PACKAGING ================= */}
       <section className="py-20 px-6">
         <div className="max-w-6xl mx-auto">
+
           <h2 className="text-3xl font-bold text-center text-gray-900">
-            Export Packaging & Container Loading
+            Export Packaging & Container Loading Details
           </h2>
 
           <div className="mt-12 bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-2xl p-10 shadow-lg">
+
             <div className="grid md:grid-cols-2 gap-6 text-lg">
-              <div>Loading Port: Cochin / Tuticorin</div>
+
+              <div>Loading Ports: Cochin / Tuticorin</div>
               <div>Container Type: 20’ / 40’ Container</div>
-              <div>Approx 14 – 18 MT per container</div>
-              <div>25kg / 50kg Export Bags</div>
+              <div>Capacity: 14 – 18 MT per container</div>
+              <div>Packaging: 25kg / 50kg Bags</div>
               <div>Private Label Packaging Available</div>
               <div>Fumigation Available</div>
+
             </div>
+
+            <div className="mt-8 text-center">
+              <p className="text-yellow-200 font-semibold">
+                ⚠️ Limited Weekly Export Slots – Contact Early to Reserve Shipment
+              </p>
+            </div>
+
           </div>
         </div>
       </section>
 
-      {/* ================= QUALITY ASSURANCE ================= */}
+      {/* ================= WHY CHOOSE US ================= */}
       <section className="py-20 px-6 bg-white">
+
         <div className="max-w-5xl mx-auto text-center">
+
           <h2 className="text-3xl font-bold text-gray-900">
-            Quality Assurance
+            Why Choose Wander Breeze Exim?
           </h2>
 
-          <p className="mt-6 text-gray-600">
-            Every batch undergoes strict quality inspection including
-            moisture testing, grading, cleaning and packing to ensure
-            compliance with international food safety standards.
-          </p>
+          <ul className="mt-8 space-y-3 text-gray-700">
+            <li>✔ Direct Sourcing from Farms</li>
+            <li>✔ Competitive Export Pricing</li>
+            <li>✔ Reliable Supply Chain</li>
+            <li>✔ Export Documentation Support</li>
+            <li>✔ Fast Buyer Response</li>
+          </ul>
+
         </div>
+
       </section>
 
       {/* ================= FINAL CTA ================= */}
       <section className="py-20 px-6 text-center bg-gradient-to-r from-green-600 to-blue-600 text-white">
+
         <h2 className="text-3xl font-bold">
-          Looking for Reliable Black Pepper Exporter from India?
+          Looking for Bulk Black Pepper Supplier from India?
         </h2>
 
         <p className="mt-4 text-lg">
-          Partner with Wander Breeze Exim for consistent quality and
-          competitive export pricing.
+          Get the latest export pricing and secure your shipment today.
         </p>
 
         <div className="mt-8 flex justify-center gap-4">
           <button
             className="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition"
-            onClick={() => handleNavigation("contact")}
+            onClick={() => setShowModal(true)}
           >
-            Request Price
+            Request Price Now
           </button>
         </div>
+
       </section>
+
+      {/* ✅ MODAL */}
+      <ContactModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        product="Black Pepper"
+      />
 
     </div>
   );

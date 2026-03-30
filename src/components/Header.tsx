@@ -45,10 +45,10 @@ const Header: React.FC<HeaderProps> = ({ onNavigate, noMenu = false }) => {
     setIsMenuOpen(false);
 
     // If Payment Terms → go to new page
-    if (section === 'paymentterms') {
-      navigate('/payment-terms');
-      return;
-    }
+    // if (section === 'paymentterms') {
+    //   navigate('/payment-terms');
+    //   return;
+    // }
 
     // If already on homepage → scroll
     if (location.pathname === '/') {
@@ -77,6 +77,8 @@ const Header: React.FC<HeaderProps> = ({ onNavigate, noMenu = false }) => {
     { label: 'Home', section: 'home' },
     { label: 'Products', section: 'products' },
     { label: 'Certifications', section: 'certifications' },
+    { label: 'Reports', section: 'reports' },
+    { label: 'Packing', section: 'packing' },
     { label: 'Payment Terms', section: 'paymentterms' }, // 👈 new page
     { label: 'Contact', section: 'contact' },
   ];
