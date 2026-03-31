@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 import ContactModal from "../../components/ContactModal";
 
-import pumpkinImage from '../../../dist/assets/pumpkin.png';
+import pumpkinImage from '../../../dist/assets/Pumpkin.png';
 
 const Pumpkin = () => {
 
