@@ -1,7 +1,7 @@
 export interface Product {
   id: string;
   name: string;
-  category: 'spices' | 'agri-products' | 'value-added';
+  category: 'spices' | 'agri-products';
   image: string;
   hsnCode: string;
   placeOfOrigin: string;

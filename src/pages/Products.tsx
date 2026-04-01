@@ -10,7 +10,7 @@ const Products: React.FC = () => {
     { id: 'all', label: 'All Products', icon: Package, count: products.length },
     { id: 'spices', label: 'Spices', icon: Package, count: products.filter(p => p.category === 'spices').length },
     { id: 'agri-products', label: 'Agri products', icon: Package, count: products.filter(p => p.category === 'agri-products').length },
-    { id: 'value-added', label: 'Value Added products', icon: Package, count: products.filter(p => p.category === 'value-added').length },
+    // { id: 'value-added', label: 'Value Added products', icon: Package, count: products.filter(p => p.category === 'value-added').length },
     // { id: 'dry-fish', label: 'Dry Fish', icon: Fish, count: products.filter(p => p.category === 'dry-fish').length },
     // { id: 'Earthenware', label: 'Earthenware', icon: Palette, count: products.filter(p => p.category === 'Earthenware').length }
   ];

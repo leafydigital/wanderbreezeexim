@@ -41,7 +41,7 @@ export const products: Product[] = [
     hsnCode: '0904.11.20',
     placeOfOrigin: 'India',
     color: 'Black',
-    grade: 'FAQ / 500 G/L / 550 G/L',
+    grade: ' 500 G/L / 550 G/L',
     description: 'High density whole black pepper suitable for international export',
     route:"/products/pepper"
   },
@@ -143,18 +143,18 @@ export const products: Product[] = [
   // },
 
   // ONION
-  {
-    id: 'onion',
-    name: 'Fresh Onion',
-    category: 'agri-products',
-    image: onion,
-    hsnCode: '0703.10.00',
-    placeOfOrigin: 'India',
-    color: 'Red / White',
-    grade: 'Size: 40mm / 50mm / 60mm',
-    description: 'Fresh export quality onions sorted by size',
-    route:"/products/onion"
-  },
+  // {
+  //   id: 'onion',
+  //   name: 'Fresh Onion',
+  //   category: 'agri-products',
+  //   image: onion,
+  //   hsnCode: '0703.10.00',
+  //   placeOfOrigin: 'India',
+  //   color: 'Red / White',
+  //   grade: 'Size: 40mm / 50mm / 60mm',
+  //   description: 'Fresh export quality onions sorted by size',
+  //   route:"/products/onion"
+  // },
 
   // COCONUT
   {
@@ -165,23 +165,23 @@ export const products: Product[] = [
     hsnCode: '0801.19.10',
     placeOfOrigin: 'India',
     color: 'Natural Brown',
-    grade: 'Weight: 400 – 600g per coconut',
+    grade: 'Weight: 500 – 650g per coconut',
     description: 'Mature fresh coconuts suitable for international export',
     route:"/products/coconuts"
   },
   // BANANA
-  {
-    id: 'banana',
-    name: 'Banana - G9',
-    category: 'agri-products',
-    image: banana,
-    hsnCode: '0803.90.10',
-    placeOfOrigin: 'India',
-    color: 'Natural Green',
-    grade: '5 finger - 20 cm length minimum',
-    description: 'Fresh harvested bananas with export quality',
-    route:"/products/banana"
-  },
+  // {
+  //   id: 'banana',
+  //   name: 'Banana - G9',
+  //   category: 'agri-products',
+  //   image: banana,
+  //   hsnCode: '0803.90.10',
+  //   placeOfOrigin: 'India',
+  //   color: 'Natural Green',
+  //   grade: '5 finger - 20 cm length minimum',
+  //   description: 'Fresh harvested bananas with export quality',
+  //   route:"/products/banana"
+  // },
   //  // COCO-PEAT
   // {
   //   id: 'coco-peat',
@@ -196,18 +196,18 @@ export const products: Product[] = [
   //   route:"/products/coco-peats"
   // },
   // SWEET-POTATO
-  {
-    id: 'sweet-potato',
-    name: 'Sweet Potato',
-    category: 'agri-products',
-    image: sweetpotato,
-    hsnCode: '0714.20.00',
-    placeOfOrigin: 'India',
-    color: 'Reddish-brown skin with vibrant orange flesh',
-    grade: 'A Grade / Export Quality / Uniform Size',
-    description: 'Premium quality fresh sweet potatoes suitable for international export with rich taste and high nutritional value.',
-    route:"/products/sweet-potato"
-  }//,
+  // {
+  //   id: 'sweet-potato',
+  //   name: 'Sweet Potato',
+  //   category: 'agri-products',
+  //   image: sweetpotato,
+  //   hsnCode: '0714.20.00',
+  //   placeOfOrigin: 'India',
+  //   color: 'Reddish-brown skin with vibrant orange flesh',
+  //   grade: 'A Grade / Export Quality / Uniform Size',
+  //   description: 'Premium quality fresh sweet potatoes suitable for international export with rich taste and high nutritional value.',
+  //   route:"/products/sweet-potato"
+  // }//,
   // YELLOW-PUMPKIN
   // {
   //   id: 'yellow-pumpkin',

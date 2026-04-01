@@ -91,8 +91,7 @@ const Footer: React.FC<HeaderProps> = ({ onNavigate, noMenu = false }) => {
               WanderBreeze<span className="text-emerald-400">Exim</span>
             </h3>
             <p className="text-gray-300 mb-6 leading-relaxed">
-              Your trusted partner for premium Indian exports. We specialize in authentic spices,
-              quality dry fish, and exquisite handcrafted items with worldwide delivery.
+              Leading exporter of Kerala spices from India, specializing in Cardamom, Black Pepper, and Coconut. We supply export-grade products from Idukki with consistent quality, competitive pricing, and dependable global delivery.
             </p>
             <div className="flex space-x-4">
               <a
