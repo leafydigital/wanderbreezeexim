@@ -2,11 +2,9 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import ContactModal from "../../components/ContactModal";
-
-import cardamomImage from '../../../dist/assets/Cardamom.png';
+import cardamomImage from "../../../dist/assets/Cardamom.png";
 
 const Cardamom = () => {
-
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -14,14 +12,8 @@ const Cardamom = () => {
 
   useEffect(() => {
     document.title =
-      "Green Cardamom Exporter from India | Bulk Cardamom Supplier | Wander Breeze Exim";
+      "Indian Green Cardamom Exporter | Bulk Wholesale Supplier";
   }, []);
-
-  const handleNavigation = (section: string) => {
-    if (section === "contact") {
-      navigate("/#contact");
-    }
-  };
 
   return (
     <div className="bg-gray-50">
@@ -31,20 +23,21 @@ const Cardamom = () => {
 
         <div>
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight">
-            Green Cardamom Exporter from India
+            Indian Green Cardamom Exporter – Bulk Wholesale Supplier
           </h1>
 
           <p className="mt-6 text-lg text-gray-600">
-            Premium export quality green cardamom sourced from top plantations in India.
-            Carefully graded, cleaned, and packed to meet international spice standards.
+            Wander Breeze Exim is a leading exporter of premium Indian green cardamom
+            sourced from Idukki plantations in Kerala. We supply 8mm bold, high-aroma,
+            export-quality cardamom for global spice markets.
           </p>
 
           <ul className="mt-8 space-y-3 text-gray-700">
-            <li>✔ Premium Export Grade</li>
-            <li>✔ Strong Aroma & Natural Flavor</li>
-            <li>✔ Machine Cleaned & Graded</li>
-            <li>✔ Low Moisture Content</li>
-            <li>✔ Bulk & Private Label Supply</li>
+            <li>✔ 8mm Bold & Premium Grades Available</li>
+            <li>✔ Moisture Controlled (10% – 12%)</li>
+            <li>✔ Deep Natural Green Color</li>
+            <li>✔ HS Code: 090831</li>
+            <li>✔ Bulk Export & Private Label Supply</li>
           </ul>
 
           <div className="mt-10 flex gap-4">
@@ -60,7 +53,7 @@ const Cardamom = () => {
         <div>
           <img
             src={cardamomImage}
-            alt="Green Cardamom Export from India"
+            alt="Indian Green Cardamom Exporter Bulk Supply"
             className="rounded-xl shadow-lg"
           />
         </div>
@@ -73,17 +66,17 @@ const Cardamom = () => {
 
           <div className="p-6 shadow rounded-xl">
             <h4 className="font-semibold text-blue-600">Origin</h4>
-            <p className="mt-2 text-gray-600">India</p>
+            <p className="mt-2 text-gray-600">Idukki, Kerala (Western Ghats)</p>
           </div>
 
           <div className="p-6 shadow rounded-xl">
             <h4 className="font-semibold text-blue-600">Minimum Order</h4>
-            <p className="mt-2 text-gray-600">100 Kg / Bulk Orders</p>
+            <p className="mt-2 text-gray-600">500 KG (Sea Freight)</p>
           </div>
 
           <div className="p-6 shadow rounded-xl">
             <h4 className="font-semibold text-blue-600">Supply Capacity</h4>
-            <p className="mt-2 text-gray-600">Large Volume Supply Available</p>
+            <p className="mt-2 text-gray-600">Large Volume Export Supply</p>
           </div>
 
         </div>
@@ -94,14 +87,19 @@ const Cardamom = () => {
         <div className="max-w-5xl mx-auto text-center">
 
           <h2 className="text-3xl font-bold text-gray-900">
-            Export Quality Green Cardamom
+            Premium Indian Green Cardamom – Queen of Spices
           </h2>
 
           <p className="mt-6 text-gray-600 leading-relaxed">
-            Known as the "Queen of Spices", Indian green cardamom is highly valued
-            for its rich aroma, strong flavor, and medicinal properties.
-            Our cardamom is carefully sorted and graded to ensure premium
-            export quality for global spice markets.
+            Sourced from high-altitude plantations in the Western Ghats,
+            Indian green cardamom is globally known for its strong aroma,
+            rich flavor, and essential oil content.
+          </p>
+
+          <p className="mt-4 text-gray-600 leading-relaxed">
+            Our export-grade cardamom is processed in controlled environments
+            to preserve natural color, aroma compounds, and freshness,
+            making it ideal for retail, spice blending, and food processing industries.
           </p>
 
         </div>
@@ -112,28 +110,26 @@ const Cardamom = () => {
         <div className="max-w-6xl mx-auto">
 
           <h2 className="text-3xl font-bold text-center text-gray-900">
-            Technical Specifications – Export Grade Cardamom
+            Specifications & Export Quality Standards
           </h2>
 
           <div className="mt-12 grid md:grid-cols-2 gap-6">
 
             {[
-              ["Type", "Whole Green Cardamom"],
-              ["Moisture", "< 10%"],
-              ["Size Grades", "6mm / 7mm / 8mm"],
-              ["Color", "Natural Green"],
+              ["Origin", "Western Ghats (Kerala), India"],
+              ["HS Code", "090831 / 090832"],
+              ["Grades", "8mm Bold, 7.5mm Premium, 7mm Standard"],
+              ["Color", "Deep Green to Pale Green"],
+              ["Moisture", "10% – 12% Max"],
               ["Admixture", "< 1%"],
-              ["Packaging", "5kg / 25kg Export Bags"],
-              ["Grade", "Premium Export Quality"],
-              ["Shelf Life", "12 – 18 Months"],
+              ["Shelf Life", "24 Months"],
+              ["Processing", "Machine Cleaned & Graded"],
             ].map(([label, value]) => (
               <div
                 key={label}
                 className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition"
               >
-                <h4 className="font-semibold text-blue-600">
-                  {label}
-                </h4>
+                <h4 className="font-semibold text-blue-600">{label}</h4>
                 <p className="mt-2 text-gray-600">{value}</p>
               </div>
             ))}
@@ -147,25 +143,23 @@ const Cardamom = () => {
         <div className="max-w-6xl mx-auto">
 
           <h2 className="text-3xl font-bold text-center text-gray-900">
-            Export Packaging & Container Loading Details
+            Global Shipping & Packaging for Bulk Cardamom
           </h2>
 
           <div className="mt-12 bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-2xl p-10 shadow-lg">
 
             <div className="grid md:grid-cols-2 gap-6 text-lg">
-
-              <div>Loading Ports: Cochin / Tuticorin</div>
-              <div>Container Type: 20’ / 40’ Container</div>
-              <div>Capacity: 8 – 12 MT per container</div>
-              <div>Vacuum Packaging Available</div>
-              <div>Private Label Packaging Available</div>
-              <div>Fumigation Available</div>
-
+              <div>Packaging: 5kg / 10kg Vacuum Packs</div>
+              <div>Master Packing: Export Cartons / Jute Bags</div>
+              <div>MOQ: 500 KG (Sea) / Air Shipment Available</div>
+              <div>Incoterms: FOB / CIF / CFR</div>
+              <div>Private Labeling Available</div>
+              <div>Moisture & UV Protection Packaging</div>
             </div>
 
             <div className="mt-8 text-center">
               <p className="text-yellow-200 font-semibold">
-                ⚠️ Limited Weekly Export Slots – Contact Early to Reserve Shipment
+                ⚠️ Premium Grades Limited – Contact Early for Availability
               </p>
             </div>
 
@@ -173,28 +167,59 @@ const Cardamom = () => {
         </div>
       </section>
 
-      {/* ================= WHY CHOOSE US ================= */}
+      {/* ================= QUALITY ================= */}
       <section className="py-20 px-6 bg-white">
+        <div className="max-w-5xl mx-auto">
 
-        <div className="max-w-5xl mx-auto text-center">
-
-          <h2 className="text-3xl font-bold text-gray-900">
-            Why Choose Wander Breeze Exim?
+          <h2 className="text-3xl font-bold text-center text-gray-900">
+            Quality Assurance & Export Documentation
           </h2>
 
-          <ul className="mt-8 space-y-3 text-gray-700">
-            <li>✔ Direct Sourcing from Plantations</li>
-            <li>✔ Competitive Export Pricing</li>
-            <li>✔ Reliable Supply Chain</li>
-            <li>✔ Export Documentation Support</li>
-            <li>✔ Fast Buyer Response</li>
+          <ul className="mt-10 space-y-4 text-gray-700">
+            <li>✔ Phytosanitary Certification</li>
+            <li>✔ Certificate of Origin</li>
+            <li>✔ Lab Testing for Pesticide Residues</li>
+            <li>✔ EU & FDA Compliance</li>
           </ul>
 
         </div>
-
       </section>
 
-      {/* ================= FINAL CTA ================= */}
+      {/* ================= FAQ ================= */}
+      <section className="py-20 px-6">
+        <div className="max-w-5xl mx-auto">
+
+          <h2 className="text-3xl font-bold text-center text-gray-900">
+            Frequently Asked Questions
+          </h2>
+
+          <div className="mt-10 space-y-6 text-gray-700">
+
+            <div>
+              <h4 className="font-semibold">What is the HS code?</h4>
+              <p>090831 for whole cardamom and 090832 for ground cardamom.</p>
+            </div>
+
+            <div>
+              <h4 className="font-semibold">What is 8mm bold cardamom?</h4>
+              <p>Pods above 8mm size with higher oil content and strong aroma.</p>
+            </div>
+
+            <div>
+              <h4 className="font-semibold">How is color preserved?</h4>
+              <p>Using controlled drying and vacuum packaging.</p>
+            </div>
+
+            <div>
+              <h4 className="font-semibold">Can lab testing be provided?</h4>
+              <p>Yes, full pesticide and quality testing reports available.</p>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* ================= CTA ================= */}
       <section className="py-20 px-6 text-center bg-gradient-to-r from-green-600 to-blue-600 text-white">
 
         <h2 className="text-3xl font-bold">
@@ -202,7 +227,7 @@ const Cardamom = () => {
         </h2>
 
         <p className="mt-4 text-lg">
-          Get the latest export pricing and secure your shipment today.
+          Get the latest export pricing and secure premium quality supply.
         </p>
 
         <div className="mt-8 flex justify-center gap-4">
@@ -216,7 +241,7 @@ const Cardamom = () => {
 
       </section>
 
-      {/* ✅ MODAL */}
+      {/* ================= MODAL ================= */}
       <ContactModal
         isOpen={showModal}
         onClose={() => setShowModal(false)}

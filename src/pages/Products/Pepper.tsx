@@ -2,11 +2,9 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import ContactModal from "../../components/ContactModal";
-
-import pepperImage from '../../../dist/assets/Pepper.png';
+import pepperImage from "../../../dist/assets/Pepper.png";
 
 const BlackPepper = () => {
-
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -14,14 +12,8 @@ const BlackPepper = () => {
 
   useEffect(() => {
     document.title =
-      "Black Pepper Exporter from India | Bulk Pepper Supplier | Wander Breeze Exim";
+      "Indian Black Pepper Exporter | Tellicherry & Malabar Wholesale Supplier";
   }, []);
-
-  const handleNavigation = (section: string) => {
-    if (section === "contact") {
-      navigate("/#contact");
-    }
-  };
 
   return (
     <div className="bg-gray-50">
@@ -31,20 +23,21 @@ const BlackPepper = () => {
 
         <div>
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight">
-            Black Pepper Exporter from India
+            Indian Black Pepper Exporter – Tellicherry & Malabar Bulk Supplier
           </h1>
 
           <p className="mt-6 text-lg text-gray-600">
-            Premium export quality black pepper sourced from top farms in India,
-            known for its strong aroma, high piperine content, and superior quality.
+            Wander Breeze Exim is a trusted Indian black pepper exporter supplying
+            premium Tellicherry (TGEB), MG1, and 500–600 GL grades sourced from the
+            Malabar coast. High piperine, strong aroma, and export-ready quality.
           </p>
 
           <ul className="mt-8 space-y-3 text-gray-700">
-            <li>✔ High Piperine Content</li>
-            <li>✔ Machine Cleaned & Graded</li>
-            <li>✔ Bold & Uniform Size</li>
-            <li>✔ Low Moisture Content</li>
-            <li>✔ Bulk & Private Label Supply</li>
+            <li>✔ Tellicherry TGEB & 500–600 GL Grades</li>
+            <li>✔ Moisture Controlled (Max 11% – 12%)</li>
+            <li>✔ High Piperine Content (4% – 7%)</li>
+            <li>✔ ASTA Clean & EU MRL Compliant</li>
+            <li>✔ HS Code: 090411</li>
           </ul>
 
           <div className="mt-10 flex gap-4">
@@ -60,7 +53,7 @@ const BlackPepper = () => {
         <div>
           <img
             src={pepperImage}
-            alt="Black Pepper Export from India"
+            alt="Indian Black Pepper Exporter Bulk Supply"
             className="rounded-xl shadow-lg"
           />
         </div>
@@ -73,17 +66,17 @@ const BlackPepper = () => {
 
           <div className="p-6 shadow rounded-xl">
             <h4 className="font-semibold text-blue-600">Origin</h4>
-            <p className="mt-2 text-gray-600">India</p>
+            <p className="mt-2 text-gray-600">Malabar Coast (Kerala / Karnataka)</p>
           </div>
 
           <div className="p-6 shadow rounded-xl">
             <h4 className="font-semibold text-blue-600">Minimum Order</h4>
-            <p className="mt-2 text-gray-600">100 Kg / Bulk Orders</p>
+            <p className="mt-2 text-gray-600">500 KG – Bulk Orders</p>
           </div>
 
           <div className="p-6 shadow rounded-xl">
             <h4 className="font-semibold text-blue-600">Supply Capacity</h4>
-            <p className="mt-2 text-gray-600">High Volume Supply Available</p>
+            <p className="mt-2 text-gray-600">High Volume Export Supply</p>
           </div>
 
         </div>
@@ -94,13 +87,19 @@ const BlackPepper = () => {
         <div className="max-w-5xl mx-auto text-center">
 
           <h2 className="text-3xl font-bold text-gray-900">
-            Export Quality Black Pepper
+            Authentic Malabar Black Pepper – King of Spices
           </h2>
 
           <p className="mt-6 text-gray-600 leading-relaxed">
-            Indian black pepper is globally renowned for its pungency,
-            strong aroma, and high piperine content. Our pepper is carefully
-            cleaned, graded, and packed to meet international export standards.
+            Indian black pepper is globally recognized for its strong pungency,
+            rich aroma, and high essential oil content. Our pepper is sourced
+            directly from Kerala and Karnataka plantations.
+          </p>
+
+          <p className="mt-4 text-gray-600 leading-relaxed">
+            Processed in ISO-certified facilities, our pepper retains its natural
+            oils and flavor, making it ideal for food processing, pharmaceuticals,
+            and premium spice retail brands.
           </p>
 
         </div>
@@ -111,28 +110,26 @@ const BlackPepper = () => {
         <div className="max-w-6xl mx-auto">
 
           <h2 className="text-3xl font-bold text-center text-gray-900">
-            Technical Specifications – Export Grade Black Pepper
+            Tellicherry (TGEB) & 500 GL Black Pepper Specifications
           </h2>
 
           <div className="mt-12 grid md:grid-cols-2 gap-6">
 
             {[
-              ["Type", "Whole Black Pepper"],
-              ["Moisture", "< 12%"],
-              ["Piperine Content", "5% – 7%"],
-              ["Density", "550 – 580 GL"],
-              ["Admixture", "< 1%"],
-              ["Packaging", "25kg / 50kg Bags"],
-              ["Grade", "Premium Export Quality"],
-              ["Shelf Life", "12 – 18 Months"],
+              ["Origin", "Malabar Coast (Kerala / Karnataka), India"],
+              ["HS Code", "090411 / 090412"],
+              ["Grades", "TGEB, TGSEB, MG1, 500–600 GL"],
+              ["Density", "500 – 630 GL"],
+              ["Moisture", "Max 11% – 12%"],
+              ["Piperine", "4% – 7%"],
+              ["Extraneous Matter", "< 0.5% (ASTA Clean)"],
+              ["Sterilization", "Steam / ETO Treated"],
             ].map(([label, value]) => (
               <div
                 key={label}
                 className="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition"
               >
-                <h4 className="font-semibold text-blue-600">
-                  {label}
-                </h4>
+                <h4 className="font-semibold text-blue-600">{label}</h4>
                 <p className="mt-2 text-gray-600">{value}</p>
               </div>
             ))}
@@ -146,25 +143,23 @@ const BlackPepper = () => {
         <div className="max-w-6xl mx-auto">
 
           <h2 className="text-3xl font-bold text-center text-gray-900">
-            Export Packaging & Container Loading Details
+            B2B Logistics, Compliance & Bulk Packaging
           </h2>
 
           <div className="mt-12 bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-2xl p-10 shadow-lg">
 
             <div className="grid md:grid-cols-2 gap-6 text-lg">
-
-              <div>Loading Ports: Cochin / Tuticorin</div>
-              <div>Container Type: 20’ / 40’ Container</div>
-              <div>Capacity: 14 – 18 MT per container</div>
-              <div>Packaging: 25kg / 50kg Bags</div>
-              <div>Private Label Packaging Available</div>
-              <div>Fumigation Available</div>
-
+              <div>Packaging: 25kg / 50kg PP or Jute Bags</div>
+              <div>Vacuum LDPE Liners Available</div>
+              <div>Ports: Cochin / Tuticorin</div>
+              <div>MOQ: 500 KG+</div>
+              <div>Spices Board of India Certified</div>
+              <div>Phytosanitary & COA Provided</div>
             </div>
 
             <div className="mt-8 text-center">
               <p className="text-yellow-200 font-semibold">
-                ⚠️ Limited Weekly Export Slots – Contact Early to Reserve Shipment
+                ⚠️ Premium Tellicherry Grades Limited – Book Early
               </p>
             </div>
 
@@ -172,28 +167,59 @@ const BlackPepper = () => {
         </div>
       </section>
 
-      {/* ================= WHY CHOOSE US ================= */}
+      {/* ================= QUALITY ================= */}
       <section className="py-20 px-6 bg-white">
+        <div className="max-w-5xl mx-auto">
 
-        <div className="max-w-5xl mx-auto text-center">
-
-          <h2 className="text-3xl font-bold text-gray-900">
-            Why Choose Wander Breeze Exim?
+          <h2 className="text-3xl font-bold text-center text-gray-900">
+            Quality Control & Global Compliance
           </h2>
 
-          <ul className="mt-8 space-y-3 text-gray-700">
-            <li>✔ Direct Sourcing from Farms</li>
-            <li>✔ Competitive Export Pricing</li>
-            <li>✔ Reliable Supply Chain</li>
-            <li>✔ Export Documentation Support</li>
-            <li>✔ Fast Buyer Response</li>
+          <ul className="mt-10 space-y-4 text-gray-700">
+            <li>✔ Steam Sterilized & Lab Tested</li>
+            <li>✔ EU MRL & FDA Compliant</li>
+            <li>✔ Spices Board of India Approved</li>
+            <li>✔ Certificate of Analysis (COA) Provided</li>
           </ul>
 
         </div>
-
       </section>
 
-      {/* ================= FINAL CTA ================= */}
+      {/* ================= FAQ ================= */}
+      <section className="py-20 px-6">
+        <div className="max-w-5xl mx-auto">
+
+          <h2 className="text-3xl font-bold text-center text-gray-900">
+            Frequently Asked Questions
+          </h2>
+
+          <div className="mt-10 space-y-6 text-gray-700">
+
+            <div>
+              <h4 className="font-semibold">What is the HS code for black pepper?</h4>
+              <p>090411 for whole pepper and 090412 for ground pepper.</p>
+            </div>
+
+            <div>
+              <h4 className="font-semibold">What is TGEB grade?</h4>
+              <p>Tellicherry Garbled Extra Bold – larger size, higher oil content.</p>
+            </div>
+
+            <div>
+              <h4 className="font-semibold">What is GL in black pepper?</h4>
+              <p>Grams per liter – indicates density and quality of pepper.</p>
+            </div>
+
+            <div>
+              <h4 className="font-semibold">Is it EU compliant?</h4>
+              <p>Yes, fully tested for pesticide residues and food safety standards.</p>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* ================= CTA ================= */}
       <section className="py-20 px-6 text-center bg-gradient-to-r from-green-600 to-blue-600 text-white">
 
         <h2 className="text-3xl font-bold">
@@ -201,7 +227,7 @@ const BlackPepper = () => {
         </h2>
 
         <p className="mt-4 text-lg">
-          Get the latest export pricing and secure your shipment today.
+          Get premium Tellicherry and Malabar pepper at competitive export pricing.
         </p>
 
         <div className="mt-8 flex justify-center gap-4">
@@ -215,7 +241,7 @@ const BlackPepper = () => {
 
       </section>
 
-      {/* ✅ MODAL */}
+      {/* ================= MODAL ================= */}
       <ContactModal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
