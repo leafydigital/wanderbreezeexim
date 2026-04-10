@@ -75,10 +75,11 @@ const Header: React.FC<HeaderProps> = ({ onNavigate, noMenu = false }) => {
 
   const menuItems = [
     { label: 'Home', section: 'home' },
+    { label: 'About', section: 'about' },
     { label: 'Products', section: 'products' },
-    { label: 'Certifications', section: 'certifications' },
-    { label: 'Reports', section: 'reports' },
-    { label: 'Packing', section: 'packing' },
+    // { label: 'Certifications', section: 'certifications' },
+    // { label: 'Reports', section: 'reports' },
+    // { label: 'Packing', section: 'packing' },
     { label: 'Payment Terms', section: 'paymentterms' }, // 👈 new page
     { label: 'Contact', section: 'contact' },
   ];
