@@ -27,10 +27,15 @@ import ThankYou from './pages/ThankYou';
 import Reports from './components/Reports';
 import Packing from './components/Packaging';
 import ProcessRoadmap from './components/ProcessFlow';
+import About from './components/About';
+import CoconutExportFromIndia from './pages/CoconutExportFromIndia';
+import CardamomExportFromIndia from './pages/CardamomExportFromIndia';
+import BlackPepperExportFromIndia from './pages/BlackPepperExportFromIndia';
 
 function HomePage() {
   const sectionRefs = {
     home: useRef<HTMLDivElement>(null),
+    about: useRef<HTMLDivElement>(null),
     products: useRef<HTMLDivElement>(null),
     certifications: useRef<HTMLDivElement>(null),
     reports: useRef<HTMLDivElement>(null),
@@ -50,6 +55,9 @@ function HomePage() {
     <>
       <div ref={sectionRefs.home}>
         <Hero onNavigate={scrollToSection} />
+      </div>
+      <div ref={sectionRefs.about}>
+        <About />
       </div>
       <div ref={sectionRefs.products}>
         <Products />
@@ -96,6 +104,9 @@ function App() {
         <Route path="/products/banana" element={<Banana />} />
         <Route path="/products/yellow-pumpkin" element={<YellowPumpkin />} />
         <Route path="/products/sweet-potato" element={<SweetPotato />} />
+        <Route path="/coconut-export-from-india" element={<CoconutExportFromIndia  />} />
+        <Route path="/cardamom-export-from-india" element={<CardamomExportFromIndia  />} />
+        <Route path="/black-pepper-export-from-india" element={<BlackPepperExportFromIndia  />} />
         <Route path="/thank-you" element={<ThankYou />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
