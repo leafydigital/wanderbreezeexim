@@ -180,16 +180,16 @@ const Footer: React.FC<HeaderProps> = ({ onNavigate, noMenu = false }) => {
           </div>
 
           {/* Product Categories */}
-          <div>
+          {/* <div>
             <h4 className="text-lg font-semibold mb-6">Product Categories</h4>
             <ul className="space-y-3">
               <li><a href="#products" className="text-gray-300 hover:text-emerald-400 transition-colors duration-200">Spices & Powders</a></li>
-              <li><a href="#products" className="text-gray-300 hover:text-emerald-400 transition-colors duration-200">Agro Products</a></li>
+              <li><a href="#products" className="text-gray-300 hover:text-emerald-400 transition-colors duration-200">Agro Products</a></li> */}
               {/* <li><a href="#products" className="text-gray-300 hover:text-emerald-400 transition-colors duration-200">Handcrafted Items</a></li> */}
-              <li><a href="#products" className="text-gray-300 hover:text-emerald-400 transition-colors duration-200">Custom Products</a></li>
+              {/* <li><a href="#products" className="text-gray-300 hover:text-emerald-400 transition-colors duration-200">Custom Products</a></li>
               <li><a href="#products" className="text-gray-300 hover:text-emerald-400 transition-colors duration-200">Bulk Orders</a></li>
             </ul>
-          </div>
+          </div> */}
 
           {/* Contact Info */}
           <div>
