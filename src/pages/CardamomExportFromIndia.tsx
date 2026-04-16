@@ -1,12 +1,24 @@
 import React, { useEffect } from "react";
+import { Helmet } from "react-helmet";
 import cardamomImage from "../../dist/assets/Cardamom.png";
 
 const CardamomExportFromIndia = () => {
 
-    useEffect(() => {
-        document.title =
-            "Bulk Green Cardamom Export from Kerala | 8mm Bold Supplier";
-    }, []);
+    // useEffect(() => {
+    //     document.title =
+    //         "Bulk Green Cardamom Export from Kerala | 8mm Bold Supplier";
+    // }, []);
+
+    <Helmet>
+        
+        <title>Premium Indian Green Cardamom Exporter | Wholesale Bulk Supplier</title>
+
+        <meta name="description"
+            content="Leading exporter of premium 8mm Bold Green Cardamom from India. We provide high-quality, pesticide-free bulk cardamom for global markets. Get a wholesale quote today." />
+        <meta name="keywords"
+            content="Indian Green Cardamom Exporter, Wholesale Cardamom Supplier, Bulk Green Cardamom Pods, 8mm Bold Green Cardamom, Premium Cardamom Export Quality, Cardamom HS Code, Idukki Cardamom, Dried Green Cardamom, Spices Export India" />
+
+    </Helmet>
 
     const whatsappLink =
         "https://wa.me/917358060254?text=Hello%20I%20am%20interested%20in%20importing%20green%20cardamom%20from%20India.%20Please%20share%20price%20and%20details.";

@@ -1,12 +1,24 @@
 import React, { useEffect } from "react";
+import { Helmet } from "react-helmet";
 import coconutImage from "../../dist/assets/Coconut.png";
 
 const CoconutExportFromIndia = () => {
 
-    useEffect(() => {
-        document.title =
-            "Bulk Coconut Export from India | Semi Husked & Fully Husked Supplier";
-    }, []);
+    // useEffect(() => {
+    //     document.title =
+    //         "Bulk Coconut Export from India | Semi Husked & Fully Husked Supplier";
+    // }, []);
+
+    <Helmet>
+
+        <title>Premium Indian Coconut Exporter | Wholesale Semi-Husked & Fully Husked</title>
+
+        <meta name="description"
+            content="Leading Indian Coconut Exporter specializing in Pollachi & Tamil Nadu varieties. Bulk semi-husked coconuts (600g+), high water content, and secure global shipping. Request a quote!" />
+        <meta name="keywords"
+            content="Indian Coconut Exporter, Wholesale Semi-Husked Coconuts, Bulk Fresh Coconut Supplier, Pollachi Coconut Wholesale, Fully Husked Coconut 600g+, Mature Fresh Coconuts for Export, Semi-Husked Coconut 25kg Bag, HS Code 080119, Phytosanitary Certification, Nut weight and circumference, Loadability 13MT/27MT" />
+
+    </Helmet>
 
     const whatsappLink =
         "https://wa.me/917358060254?text=Hello%20I%20am%20interested%20in%20importing%20coconuts%20from%20India.%20Please%20share%20details.";
