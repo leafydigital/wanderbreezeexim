@@ -1,12 +1,24 @@
 import React, { useEffect } from "react";
+import { Helmet } from "react-helmet";
 import pepperImage from "../../dist/assets/Pepper.png";
 
 const BlackPepperExportFromIndia = () => {
 
-    useEffect(() => {
-        document.title =
-            "Bulk Black Pepper Export from Kerala | Tellicherry & 500 GL Supplier";
-    }, []);
+    // useEffect(() => {
+    //     document.title =
+    //         "Bulk Black Pepper Export from Kerala | Tellicherry & 500 GL Supplier";
+    // }, []);
+
+    <Helmet>
+
+        <title>Premium Indian Black Pepper Exporter | Wholesale Tellicherry & Malabar</title>
+
+        <meta name="description"
+            content="Premium Indian Black Pepper Exporter. Bulk supply of 550 GL, TGEB & MG1 grades. Steam-sterilized, ASTA-clean & EU MRL compliant. Get wholesale quotes today!" />
+        <meta name="keywords"
+            content="Indian Black Pepper Exporter, Wholesale Black Pepper Supplier, Bulk Black Pepper India, Black Pepper Wholesale Price, Tellicherry Black Pepper Wholesale, 500 GL / 550 GL Black Pepper, ASTA Grade Black Pepper Exporter, Black Pepper HS Code 090411, Moisture content max 11%, Phytosanitary certificate, Spices Board of India" />
+
+    </Helmet>
 
     const whatsappLink =
         "https://wa.me/917358060254?text=Hello%20I%20am%20interested%20in%20importing%20black%20pepper%20from%20India.%20Please%20share%20price%20and%20details.";
