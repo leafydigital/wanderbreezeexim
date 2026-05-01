@@ -1,25 +1,42 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  
+    <url>
+        <loc>https://www.wanderbreezeexim.com/</loc>
+        <lastmod>2026-04-25</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>1.00</priority>
+    </url>
 
+   
     <url>
-        <loc>https://wanderbreezeexim.com/</loc>
-        <lastmod>2025-10-08</lastmod>
-        <changefreq>daily</changefreq>
-        <priority>1.0</priority>
+        <loc>https://www.wanderbreezeexim.com/products/cardamom</loc>
+        <lastmod>2026-04-25</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.80</priority>
     </url>
-    
+
+   
     <url>
-        <loc>https://wanderbreezeexim.com/privacy-policy</loc>
-        <lastmod>2025-10-08</lastmod>
+        <loc>https://www.wanderbreezeexim.com/products/pepper</loc>
+        <lastmod>2026-04-25</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.80</priority>
+    </url>
+
+   
+    <url>
+        <loc>https://www.wanderbreezeexim.com/products/coconuts</loc>
+        <lastmod>2026-04-25</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.80</priority>
+    </url>
+
+   
+    <url>
+        <loc>https://www.wanderbreezeexim.com/privacy-policy</loc>
+        <lastmod>2026-04-25</lastmod>
         <changefreq>yearly</changefreq>
-        <priority>0.5</priority>
+        <priority>0.50</priority>
     </url>
-    
-    <url>
-        <loc>https://wanderbreezeexim.com/terms-of-service</loc>
-        <lastmod>2025-10-08</lastmod>
-        <changefreq>yearly</changefreq>
-        <priority>0.5</priority>
-    </url>
-    
 </urlset>
