@@ -1,11 +1,16 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
+<<<<<<< HEAD
+=======
+// https://vitejs.dev/config/
+>>>>>>> 0957004f30f6f7c38f51db8ac1e815be043b5909
 export default defineConfig({
   plugins: [react()],
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
+<<<<<<< HEAD
   build: {
     rollupOptions: {
       output: {
@@ -20,4 +25,6 @@ export default defineConfig({
       },
     },
   },
+=======
+>>>>>>> 0957004f30f6f7c38f51db8ac1e815be043b5909
 });
