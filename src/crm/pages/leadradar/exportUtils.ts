@@ -1,13 +1,13 @@
 import type { Lead } from './types';
 
 const LEAD_HEADERS = [
-  'Company Name', 'Email', 'Phone Number', 'Website',
+  'Company Name', 'Email', 'All Emails', 'Phone Number', 'Website',
   'Address', 'Country', 'Category', 'Rating', 'Source',
   'LinkedIn', 'Facebook', 'Instagram', 'Twitter',
 ];
 
 const SUPPLIER_HEADERS = [
-  'Company Name', 'Email', 'Phone Number', 'Website',
+  'Company Name', 'Email', 'All Emails', 'Phone Number', 'Website',
   'Address', 'Country', 'Products', 'Min Order', 'Certifications',
   'Source', 'LinkedIn', 'Facebook', 'Instagram', 'Twitter',
 ];
@@ -16,6 +16,7 @@ function toLeadRow(l: Lead) {
   return {
     'Company Name':  l.name       || '',
     'Email':         l.email      || '',
+    'All Emails':    (l.emails || []).join('; '),
     'Phone Number':  l.phone      || '',
     'Website':       l.website    || '',
     'Address':       l.address    || '',
@@ -34,6 +35,7 @@ function toSupplierRow(l: Lead) {
   return {
     'Company Name':   l.name           || '',
     'Email':          l.email          || '',
+    'All Emails':     (l.emails || []).join('; '),
     'Phone Number':   l.phone          || '',
     'Website':        l.website        || '',
     'Address':        l.address        || '',
@@ -53,7 +55,26 @@ function isSupplierMode(leads: Lead[]): boolean {
   return leads.some(l => l.products || l.min_order || l.certifications);
 }
 
-export function exportCSV(leads: Lead[], filename = 'leads') {
+/**
+ * Build a smart filename from query + location.
+ * e.g. query="Spice Importers", location="UAE" → "Spice_Importers_UAE"
+ */
+export function buildFilename(query: string, location: string): string {
+  const clean = (s: string) =>
+    s.trim()
+      .replace(/[^a-zA-Z0-9\s]/g, '')
+      .replace(/\s+/g, '_')
+      .slice(0, 40);
+  const q = clean(query);
+  const l = clean(location);
+  if (q && l) return `${q}_${l}`;
+  if (q) return q;
+  if (l) return l;
+  return 'leads';
+}
+
+export function exportCSV(leads: Lead[], query = '', location = '') {
+  const filename = buildFilename(query, location);
   const supplier = isSupplierMode(leads);
   const headers  = supplier ? SUPPLIER_HEADERS : LEAD_HEADERS;
   const rows     = leads.map(l => supplier ? toSupplierRow(l) : toLeadRow(l));
@@ -68,7 +89,8 @@ export function exportCSV(leads: Lead[], filename = 'leads') {
   downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8;' }), `${filename}.csv`);
 }
 
-export function exportExcel(leads: Lead[], filename = 'leads') {
+export function exportExcel(leads: Lead[], query = '', location = '') {
+  const filename = buildFilename(query, location);
   const supplier = isSupplierMode(leads);
   const headers  = supplier ? SUPPLIER_HEADERS : LEAD_HEADERS;
   const rows     = leads.map(l => supplier ? toSupplierRow(l) : toLeadRow(l));

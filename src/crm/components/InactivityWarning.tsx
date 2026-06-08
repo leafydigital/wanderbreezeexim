@@ -1,132 +1,154 @@
 /**
- * InactivityWarning.tsx
- * Shows a countdown modal 2 minutes before auto-logout.
- * User can click "Stay Logged In" to reset the timer.
+ * InactivityWarning.tsx  (repurposed — no longer shows inactivity warnings)
+ *
+ * Now acts as a BeforeUnload Guard:
+ *  – Registers a window `beforeunload` handler when a lead search is running
+ *  – Shows a custom in-app confirmation modal when the user clicks the
+ *    sidebar Sign-Out button while a search is running
+ *  – Exposes `useSearchGuard` hook so SearchPage can register/clear the guard
+ *
+ * Usage in SearchPage:
+ *   import { useSearchGuard } from '../../components/InactivityWarning';
+ *   const { setSearchRunning } = useSearchGuard();
+ *   setSearchRunning(true);   // when search + enrichment starts
+ *   setSearchRunning(false);  // when it finishes
  */
-import { useEffect, useState, useCallback, useRef } from 'react';
-import { Clock, LogOut } from 'lucide-react';
+
+import {
+  createContext, useContext, useState, useEffect, useCallback, useRef,
+} from 'react';
+import { AlertTriangle, X, LogOut, Search } from 'lucide-react';
 import { useAuth } from '../lib/auth';
 
-const INACTIVITY_MS     = 30 * 60 * 1000; // 30 min total
-const WARNING_BEFORE_MS =  2 * 60 * 1000; // warn 2 min before
-const WARNING_AT_MS     = INACTIVITY_MS - WARNING_BEFORE_MS; // show at 28 min
+// ── Context ───────────────────────────────────────────────────
 
-export default function InactivityWarning() {
+interface SearchGuardCtx {
+  setSearchRunning: (running: boolean) => void;
+  isSearchRunning: boolean;
+}
+
+const SearchGuardContext = createContext<SearchGuardCtx>({
+  setSearchRunning: () => {},
+  isSearchRunning: false,
+});
+
+export function useSearchGuard() {
+  return useContext(SearchGuardContext);
+}
+
+// ── Provider + Guard component ────────────────────────────────
+
+export default function InactivityWarning({ children }: { children?: React.ReactNode }) {
   const { user, signOut } = useAuth();
-  const [showWarning, setShowWarning] = useState(false);
-  const [countdown,   setCountdown]   = useState(120); // seconds
-  const warningTimer  = useRef<ReturnType<typeof setTimeout>  | null>(null);
-  const countdownInterval = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [isSearchRunning, setIsSearchRunning_] = useState(false);
+  const [showSignOutModal, setShowSignOutModal] = useState(false);
+  const isRunningRef = useRef(false); // sync ref for beforeunload (closure-safe)
 
-  const clearAll = () => {
-    if (warningTimer.current)      clearTimeout(warningTimer.current);
-    if (countdownInterval.current) clearInterval(countdownInterval.current);
-  };
+  const setSearchRunning = useCallback((running: boolean) => {
+    isRunningRef.current = running;
+    setIsSearchRunning_(running);
+  }, []);
 
-  const resetWarning = useCallback(() => {
-    clearAll();
-    setShowWarning(false);
-    setCountdown(120);
-
-    // Schedule warning to appear at 28 minutes
-    warningTimer.current = setTimeout(() => {
-      setShowWarning(true);
-      setCountdown(120);
-      // Start countdown
-      countdownInterval.current = setInterval(() => {
-        setCountdown(c => {
-          if (c <= 1) {
-            clearInterval(countdownInterval.current!);
-            signOut();
-            return 0;
-          }
-          return c - 1;
-        });
-      }, 1000);
-    }, WARNING_AT_MS);
-  }, [signOut]);
-
-  // Reset warning timer on any user activity
+  // ── beforeunload: warn browser-level close/refresh ────────
   useEffect(() => {
-    if (!user) { clearAll(); setShowWarning(false); return; }
+    function handleBeforeUnload(e: BeforeUnloadEvent) {
+      if (!isRunningRef.current || !user) return;
+      const msg = 'A lead search is still running. If you close this tab, the search will be lost. Are you sure?';
+      e.preventDefault();
+      e.returnValue = msg; // Required for Chrome/Firefox to show the dialog
+      return msg;
+    }
 
-    const events = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'click'];
-    events.forEach(e => window.addEventListener(e, resetWarning, { passive: true }));
-    resetWarning();
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [user]);
 
-    return () => {
-      events.forEach(e => window.removeEventListener(e, resetWarning));
-      clearAll();
-    };
-  }, [user, resetWarning]);
+  // ── Intercept Sign Out while search is running ────────────
+  // We patch signOut via context so Layout's sign-out button shows a modal
+  // instead of immediately logging out. This is handled inside the guard modal.
 
-  if (!showWarning || !user) return null;
-
-  const mins = Math.floor(countdown / 60);
-  const secs = countdown % 60;
+  if (!user) return <>{children}</>;
 
   return (
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 99999,
-      background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(3px)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-    }}>
-      <div style={{
-        background: '#fff', borderRadius: 16, padding: '32px 36px',
-        maxWidth: 400, width: '90%', textAlign: 'center',
-        boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
-      }}>
-        {/* Icon */}
+    <SearchGuardContext.Provider value={{ setSearchRunning, isSearchRunning }}>
+      {children}
+
+      {/* ── Sign-out confirmation modal (shown only when signout is triggered
+           from outside while search is running — see Layout patch below) ── */}
+      {showSignOutModal && (
         <div style={{
-          width: 64, height: 64, borderRadius: '50%',
-          background: '#FEF3C7', display: 'flex', alignItems: 'center',
-          justifyContent: 'center', margin: '0 auto 20px',
+          position: 'fixed', inset: 0, zIndex: 99999,
+          background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(3px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: 16,
         }}>
-          <Clock size={30} style={{ color: '#D97706' }} />
+          <div style={{
+            background: '#fff', borderRadius: 16, padding: '32px 28px',
+            maxWidth: 420, width: '100%',
+            boxShadow: '0 24px 64px rgba(0,0,0,0.25)',
+            textAlign: 'center',
+          }}>
+            <div style={{
+              width: 60, height: 60, borderRadius: '50%',
+              background: '#FEF3C7', display: 'flex', alignItems: 'center',
+              justifyContent: 'center', margin: '0 auto 20px',
+            }}>
+              <AlertTriangle size={28} color="#D97706" />
+            </div>
+            <h2 style={{ fontSize: 19, fontWeight: 700, color: '#111', marginBottom: 10 }}>
+              Sign out while search is running?
+            </h2>
+            <p style={{ fontSize: 14, color: '#6B7280', marginBottom: 8, lineHeight: 1.65 }}>
+              A <strong>lead search is currently in progress</strong>. Signing out now will cancel it and you'll lose the results found so far.
+            </p>
+            <p style={{ fontSize: 13, color: '#9CA3AF', marginBottom: 28 }}>
+              Export or save your results first, or wait for the search to finish.
+            </p>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                onClick={() => setShowSignOutModal(false)}
+                style={{
+                  flex: 1, padding: '11px 0', borderRadius: 8,
+                  border: '1px solid #E5E7EB', background: '#fff',
+                  color: '#374151', fontSize: 14, fontWeight: 600, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                }}>
+                <Search size={14} /> Keep Searching
+              </button>
+              <button
+                onClick={() => { setShowSignOutModal(false); setSearchRunning(false); signOut(); }}
+                style={{
+                  flex: 1, padding: '11px 0', borderRadius: 8, border: 'none',
+                  background: '#DC2626', color: '#fff', fontSize: 14,
+                  fontWeight: 600, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                }}>
+                <LogOut size={14} /> Sign Out Anyway
+              </button>
+            </div>
+          </div>
         </div>
-
-        <h2 style={{ fontSize: 20, fontWeight: 700, color: '#111', marginBottom: 8 }}>
-          Session Expiring Soon
-        </h2>
-        <p style={{ fontSize: 14, color: '#6B7280', marginBottom: 24, lineHeight: 1.6 }}>
-          You've been inactive. You'll be logged out automatically in:
-        </p>
-
-        {/* Countdown */}
-        <div style={{
-          fontSize: 42, fontWeight: 800, color: countdown <= 30 ? '#DC2626' : '#D97706',
-          marginBottom: 28, fontVariantNumeric: 'tabular-nums',
-          transition: 'color 0.3s',
-        }}>
-          {mins > 0 ? `${mins}:${String(secs).padStart(2, '0')}` : `${secs}s`}
-        </div>
-
-        {/* Buttons */}
-        <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
-          <button
-            onClick={resetWarning}
-            style={{
-              flex: 1, padding: '11px 20px', borderRadius: 8, border: 'none',
-              background: '#0F9B6E', color: '#fff', fontSize: 14,
-              fontWeight: 600, cursor: 'pointer',
-            }}
-          >
-            Stay Logged In
-          </button>
-          <button
-            onClick={signOut}
-            style={{
-              flex: 1, padding: '11px 20px', borderRadius: 8,
-              border: '1px solid #e5e7eb', background: '#fff',
-              color: '#374151', fontSize: 14, fontWeight: 500,
-              cursor: 'pointer', display: 'flex', alignItems: 'center',
-              justifyContent: 'center', gap: 6,
-            }}
-          >
-            <LogOut size={14} /> Log Out Now
-          </button>
-        </div>
-      </div>
-    </div>
+      )}
+    </SearchGuardContext.Provider>
   );
+}
+
+// ── Guarded sign-out hook (used by Layout) ────────────────────
+// Layout calls useGuardedSignOut() instead of signOut() directly.
+// If a search is running it opens the modal; otherwise signs out immediately.
+
+export function useGuardedSignOut() {
+  const { isSearchRunning } = useSearchGuard();
+  const { signOut } = useAuth();
+  const [showModal, setShowModal] = useState(false);
+
+  const guardedSignOut = useCallback(() => {
+    if (isSearchRunning) {
+      setShowModal(true);
+    } else {
+      signOut();
+    }
+  }, [isSearchRunning, signOut]);
+
+  return { guardedSignOut, showModal, setShowModal };
 }

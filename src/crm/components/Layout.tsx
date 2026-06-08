@@ -4,9 +4,10 @@ import {
   DollarSign, Calculator, FolderOpen, Menu, X,
   ChevronRight, Package, Shield, UserCog, LogOut, ChevronDown,
   type LucideIcon,
-  Radar
+  Radar, Network, AlertTriangle, Search,
 } from 'lucide-react';
 import { useAuth } from '../lib/auth';
+import { useGuardedSignOut } from './InactivityWarning';
 
 export type Page =
   | 'dashboard'
@@ -20,7 +21,8 @@ export type Page =
   | 'products'
   | 'users'
   | 'roles'
-  | 'leadradar';
+  | 'leadradar'
+  | 'outreachtracker';
 
 interface LayoutProps {
   activePage: Page;
@@ -49,13 +51,16 @@ const navItems: NavItem[] = [
   { id: 'documents', label: 'Documents', icon: FolderOpen, module: 'documents' },
   { id: 'users', label: 'User Management', icon: UserCog, module: 'users' },
   { id: 'roles', label: 'Role Management', icon: Shield, module: 'roles' },
-  { id: 'leadradar',  label: 'LeadRadar',  icon: Radar, module: 'leadradar'  },
+  { id: 'leadradar',        label: 'LeadRadar',        icon: Radar,   module: 'leadradar'        },
+  { id: 'outreachtracker', label: 'Outreach Tracker', icon: Network, module: 'outreachtracker'  },
 ];
 
 export default function Layout({ activePage, onNavigate, children }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const { user, role, signOut, can } = useAuth();
+  const { user, role, can } = useAuth();
+  const { guardedSignOut, showModal, setShowModal } = useGuardedSignOut();
+  const { signOut } = useAuth();
 
   const activeItem = navItems.find(n => n.id === activePage);
   const visibleItems = navItems.filter(n => can(n.module));
@@ -148,7 +153,7 @@ export default function Layout({ activePage, onNavigate, children }: LayoutProps
               <p className="text-sm font-medium text-white truncate">{user?.name || 'User'}</p>
               <p className="text-xs text-slate-400 truncate">{role?.name ?? 'No role'}</p>
             </div>
-            <button onClick={signOut} className="text-slate-400 hover:text-red-400 transition-colors flex-shrink-0" title="Sign out">
+            <button onClick={guardedSignOut} className="text-slate-400 hover:text-red-400 transition-colors flex-shrink-0" title="Sign out">
               <LogOut size={15} />
             </button>
           </div>
@@ -185,7 +190,7 @@ export default function Layout({ activePage, onNavigate, children }: LayoutProps
                     <p className="text-xs text-gray-500">{role?.name ?? 'No role'}</p>
                   </div>
                   <button
-                    onClick={() => { signOut(); setUserMenuOpen(false); }}
+                    onClick={() => { guardedSignOut(); setUserMenuOpen(false); }}
                     className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
                   >
                     <LogOut size={14} /> Sign Out
@@ -201,6 +206,59 @@ export default function Layout({ activePage, onNavigate, children }: LayoutProps
           {children}
         </main>
       </div>
+
+      {/* ── Sign-out guard modal — shown when search is running ── */}
+      {showModal && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 99999,
+          background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(3px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
+        }}>
+          <div style={{
+            background: '#fff', borderRadius: 16, padding: '32px 28px',
+            maxWidth: 420, width: '100%',
+            boxShadow: '0 24px 64px rgba(0,0,0,0.25)', textAlign: 'center',
+          }}>
+            <div style={{
+              width: 60, height: 60, borderRadius: '50%', background: '#FEF3C7',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px',
+            }}>
+              <AlertTriangle size={28} color="#D97706" />
+            </div>
+            <h2 style={{ fontSize: 19, fontWeight: 700, color: '#111', marginBottom: 10 }}>
+              Sign out while search is running?
+            </h2>
+            <p style={{ fontSize: 14, color: '#6B7280', marginBottom: 8, lineHeight: 1.65 }}>
+              A <strong>lead search is currently in progress</strong>. Signing out now will cancel it and you'll lose the results found so far.
+            </p>
+            <p style={{ fontSize: 13, color: '#9CA3AF', marginBottom: 28 }}>
+              Export or save your results first, or wait for the search to finish.
+            </p>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                onClick={() => setShowModal(false)}
+                style={{
+                  flex: 1, padding: '11px 0', borderRadius: 8,
+                  border: '1px solid #E5E7EB', background: '#fff',
+                  color: '#374151', fontSize: 14, fontWeight: 600, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                }}>
+                <Search size={14} /> Keep Searching
+              </button>
+              <button
+                onClick={() => { setShowModal(false); signOut(); }}
+                style={{
+                  flex: 1, padding: '11px 0', borderRadius: 8, border: 'none',
+                  background: '#DC2626', color: '#fff', fontSize: 14,
+                  fontWeight: 600, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                }}>
+                <LogOut size={14} /> Sign Out Anyway
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

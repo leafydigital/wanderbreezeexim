@@ -266,7 +266,7 @@ export function replaceTags(template: string, lead: Partial<OutreachLead>): stri
   };
   let result = template;
   for (const [tag, value] of Object.entries(tags)) {
-    result = result.replaceAll(tag, value);
+    result = result.split(tag).join(value);
   }
   return result;
 }

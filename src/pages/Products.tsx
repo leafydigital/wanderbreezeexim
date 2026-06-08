@@ -1,33 +1,78 @@
-import React, { useState } from 'react';
-import { products } from '../data/products';
+import React, { useState, useEffect } from 'react';
 import ProductCard from '../components/ProductCard';
-import { Package, Fish, Palette } from 'lucide-react';
+import { Package } from 'lucide-react';
+import { supabase } from '../crm/lib/supabase';
+
+interface DBProduct {
+  id: string;
+  name: string;
+  category_group: string;
+  image_path: string | null;
+  hs_code: string | null;
+  origin: string | null;
+  color: string | null;
+  slug: string;
+  overview_text: string | null;
+  specs: { label: string; value: string }[] | null;
+}
 
 const Products: React.FC = () => {
-  const [activeCategory, setActiveCategory] = useState<'all' | 'spices' | 'dry-fish' | 'handcrafted'>('all');
+  const [dbProducts, setDbProducts] = useState<DBProduct[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeCategory, setActiveCategory] = useState<string>('all');
+
+  useEffect(() => {
+    async function fetchProducts() {
+      const { data } = await supabase
+        .from('sc_product_categories')
+        .select('id, name, category_group, image_path, hs_code, origin, color, slug, overview_text, specs')
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true });
+      setDbProducts(data || []);
+      setLoading(false);
+    }
+    fetchProducts();
+  }, []);
+
+  // Map DB product to the shape ProductCard expects
+  function toProductCard(p: DBProduct) {
+    const gradeSpec = p.specs?.find(s => s.label.toLowerCase().includes('grade'));
+    return {
+      id:            p.id,
+      name:          p.name,
+      category:      (p.category_group === 'spices' ? 'spices' : 'agri-products') as 'spices' | 'agri-products',
+      image:         p.image_path || '/Images/Cardamom.png',
+      hsnCode:       p.hs_code || '—',
+      placeOfOrigin: p.origin || 'India',
+      color:         p.color || '—',
+      grade:         gradeSpec?.value || '—',
+      description:   p.overview_text?.slice(0, 100) + (p.overview_text && p.overview_text.length > 100 ? '…' : '') || '',
+      route:         `/products/${p.slug}`,
+    };
+  }
+
+  const filtered = activeCategory === 'all'
+    ? dbProducts
+    : dbProducts.filter(p => p.category_group === activeCategory);
+
+  const spicesCount     = dbProducts.filter(p => p.category_group === 'spices').length;
+  const agriCount       = dbProducts.filter(p => p.category_group === 'agri-products').length;
+  const valueAddedCount = dbProducts.filter(p => p.category_group === 'value-added').length;
+  const seaFoodsCount   = dbProducts.filter(p => p.category_group === 'sea-foods').length;
 
   const categories = [
-    { id: 'all', label: 'All Products', icon: Package, count: products.length },
-    { id: 'spices', label: 'Spices', icon: Package, count: products.filter(p => p.category === 'spices').length },
-    { id: 'agri-products', label: 'Agri products', icon: Package, count: products.filter(p => p.category === 'agri-products').length },
-    // { id: 'value-added', label: 'Value Added products', icon: Package, count: products.filter(p => p.category === 'value-added').length },
-    // { id: 'dry-fish', label: 'Dry Fish', icon: Fish, count: products.filter(p => p.category === 'dry-fish').length },
-    // { id: 'Earthenware', label: 'Earthenware', icon: Palette, count: products.filter(p => p.category === 'Earthenware').length }
+    { id: 'all',           label: 'All Products',    count: dbProducts.length },
+    { id: 'spices',        label: 'Spices',          count: spicesCount },
+    { id: 'agri-products', label: 'Agri Products',   count: agriCount },
+    ...(valueAddedCount > 0 ? [{ id: 'value-added', label: 'Value Added', count: valueAddedCount }] : []),
+    ...(seaFoodsCount   > 0 ? [{ id: 'sea-foods',   label: 'Sea Foods',   count: seaFoodsCount   }] : []),
   ];
-
-  const filteredProducts = activeCategory === 'all'
-    ? products
-    : products.filter(product => product.category === activeCategory);
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
     if (element) {
-      const navbarHeight = 64; // Height of the navbar
-      const targetPosition = element.offsetTop - navbarHeight;
-      window.scrollTo({
-        top: targetPosition,
-        behavior: 'smooth'
-      });
+      const targetPosition = element.offsetTop - 64;
+      window.scrollTo({ top: targetPosition, behavior: 'smooth' });
     }
   };
 
@@ -46,52 +91,55 @@ const Products: React.FC = () => {
 
         {/* Category Filter */}
         <div className="flex flex-wrap justify-center gap-4 mb-12">
-          {categories.map((category) => {
-            const IconComponent = category.icon;
-            return (
-              <button
-                key={category.id}
-                onClick={() => setActiveCategory(category.id as any)}
-                className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-semibold transition-all duration-200 ${activeCategory === category.id
-                    ? 'bg-blue-700 text-white shadow-lg'
-                    : 'bg-white text-gray-700 hover:bg-blue-50 hover:text-blue-700 shadow-md'
-                  }`}
-              >
-                <IconComponent size={20} />
-                <span>{category.label}</span>
-                <span className={`text-xs px-2 py-1 rounded-full ${activeCategory === category.id
-                    ? 'bg-white/20 text-white'
-                    : 'bg-gray-200 text-gray-600'
-                  }`}>
-                  {category.count}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Products Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
+          {categories.map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => setActiveCategory(cat.id)}
+              className={`flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition-all duration-200 ${
+                activeCategory === cat.id
+                  ? 'bg-blue-700 text-white shadow-lg'
+                  : 'bg-white text-gray-700 hover:bg-blue-50 border border-gray-200'
+              }`}
+            >
+              <Package size={16} />
+              {cat.label}
+              <span className={`text-xs px-2 py-0.5 rounded-full ${
+                activeCategory === cat.id ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'
+              }`}>{cat.count}</span>
+            </button>
           ))}
         </div>
 
-        {/* Call to Action */}
-        <div className="text-center mt-16">
-          <div className="bg-white p-8 rounded-xl shadow-lg max-w-2xl mx-auto">
-            <h3 className="text-2xl font-bold text-gray-800 mb-4">
-              Need Custom Products or Bulk Orders?
-            </h3>
-            <p className="text-gray-600 mb-6">
-              We specialize in custom product sourcing and large volume exports.
-              Contact us with your specific requirements.
-            </p>
-            <button className="bg-gradient-to-r from-emerald-600 to-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:from-emerald-700 hover:to-blue-700 transition-all duration-200"
-              onClick={() => scrollToSection('contact')}>
-              Request Custom Quote
-            </button>
+        {/* Products Grid */}
+        {loading ? (
+          <div className="flex justify-center py-20">
+            <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
           </div>
+        ) : filtered.length === 0 ? (
+          <div className="text-center py-20 text-gray-400">
+            <Package size={40} className="mx-auto mb-4 opacity-30" />
+            <p className="text-lg">No products found</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {filtered.map(p => (
+              <ProductCard key={p.id} product={toProductCard(p)} />
+            ))}
+          </div>
+        )}
+
+        {/* Custom Quote CTA */}
+        <div className="text-center mt-16 p-8 bg-white rounded-2xl shadow-md max-w-2xl mx-auto">
+          <h3 className="text-2xl font-bold text-gray-800 mb-3">Need Custom Products or Bulk Orders?</h3>
+          <p className="text-gray-600 mb-6">
+            We specialize in custom product sourcing and large volume exports. Contact us with your specific requirements.
+          </p>
+          <button
+            onClick={() => scrollToSection('contact')}
+            className="bg-gradient-to-r from-blue-700 to-emerald-600 text-white px-8 py-3 rounded-lg font-semibold hover:opacity-90 transition"
+          >
+            Request Custom Quote
+          </button>
         </div>
       </div>
     </section>

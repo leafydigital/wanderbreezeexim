@@ -6,7 +6,8 @@ export interface Lead {
   id?: string;
   user_id?: string;
   name: string;
-  email: string | null;
+  email: string | null;       // primary email (first / best)
+  emails?: string[];          // all unique emails found (website + Facebook)
   phone: string | null;
   website: string | null;
   address: string | null;
@@ -22,6 +23,8 @@ export interface Lead {
   facebook?: string | null;
   instagram?: string | null;
   twitter?: string | null;
+  tiktok?: string | null;
+  youtube?: string | null;
   // Supplier-specific fields
   products?: string | null;
   min_order?: string | null;

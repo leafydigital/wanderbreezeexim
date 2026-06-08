@@ -20,8 +20,9 @@ import Products from './pages/Products';
 import Users from './pages/Users';
 import Roles from './pages/Roles';
 import LeadRadar from './pages/LeadRadar';
-import './crm.css';
+import OutreachTracker from './pages/OutreachTracker';
 import InactivityWarning from './components/InactivityWarning';
+import './crm.css';
 
 function CRMInner() {
   const { user, loading, can } = useAuth();
@@ -42,26 +43,29 @@ function CRMInner() {
 
   const firstAccessible = (
     ['dashboard','customers','suppliers','products','proforma','invoices',
-     'expenses','pricing','documents','leadradar','users','roles'] as Page[]
+     'expenses','pricing','documents','leadradar','outreachtracker','users','roles'] as Page[]
   ).find(p => can(p));
 
   const effectivePage = can(activePage) ? activePage : (firstAccessible ?? 'dashboard');
 
   return (
-    <Layout activePage={effectivePage} onNavigate={setActivePage}>
-      <div className={effectivePage === 'dashboard'  ? '' : 'hidden'}><Dashboard onNavigate={(p) => setActivePage(p as Page)} /></div>
-      <div className={effectivePage === 'customers'  ? '' : 'hidden'}><Customers /></div>
-      <div className={effectivePage === 'suppliers'  ? '' : 'hidden'}><Suppliers /></div>
-      <div className={effectivePage === 'proforma'   ? '' : 'hidden'}><ProformaInvoices /></div>
-      <div className={effectivePage === 'invoices'   ? '' : 'hidden'}><Invoices /></div>
-      <div className={effectivePage === 'expenses'   ? '' : 'hidden'}><Expenses /></div>
-      <div className={effectivePage === 'pricing'    ? '' : 'hidden'}><PricingCalculator /></div>
-      <div className={effectivePage === 'documents'  ? '' : 'hidden'}><Documents /></div>
-      <div className={effectivePage === 'products'   ? '' : 'hidden'}><Products /></div>
-      <div className={effectivePage === 'users'      ? '' : 'hidden'}><Users /></div>
-      <div className={effectivePage === 'roles'      ? '' : 'hidden'}><Roles /></div>
-      <div className={effectivePage === 'leadradar'  ? '' : 'hidden'}><LeadRadar /></div>
-    </Layout>
+    <InactivityWarning>
+      <Layout activePage={effectivePage} onNavigate={setActivePage}>
+        <div className={effectivePage === 'dashboard'       ? '' : 'hidden'}><Dashboard onNavigate={(p) => setActivePage(p as Page)} /></div>
+        <div className={effectivePage === 'customers'       ? '' : 'hidden'}><Customers /></div>
+        <div className={effectivePage === 'suppliers'       ? '' : 'hidden'}><Suppliers /></div>
+        <div className={effectivePage === 'proforma'        ? '' : 'hidden'}><ProformaInvoices /></div>
+        <div className={effectivePage === 'invoices'        ? '' : 'hidden'}><Invoices /></div>
+        <div className={effectivePage === 'expenses'        ? '' : 'hidden'}><Expenses /></div>
+        <div className={effectivePage === 'pricing'         ? '' : 'hidden'}><PricingCalculator /></div>
+        <div className={effectivePage === 'documents'       ? '' : 'hidden'}><Documents /></div>
+        <div className={effectivePage === 'products'        ? '' : 'hidden'}><Products /></div>
+        <div className={effectivePage === 'users'           ? '' : 'hidden'}><Users /></div>
+        <div className={effectivePage === 'roles'           ? '' : 'hidden'}><Roles /></div>
+        <div className={effectivePage === 'leadradar'       ? '' : 'hidden'}><LeadRadar /></div>
+        <div className={effectivePage === 'outreachtracker' ? '' : 'hidden'}><OutreachTracker /></div>
+      </Layout>
+    </InactivityWarning>
   );
 }
 
@@ -69,7 +73,6 @@ export default function CRMApp() {
   return (
     <AuthProvider>
       <CRMInner />
-      <InactivityWarning />
     </AuthProvider>
   );
 }

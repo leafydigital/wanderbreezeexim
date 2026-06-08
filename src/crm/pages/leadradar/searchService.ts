@@ -57,8 +57,8 @@ export async function runSearch(params: {
 export async function enrichBatch(
   leads: { name: string; website: string | null }[],
   location: string,
-): Promise<{ email: string | null; linkedin: string | null; facebook: string | null; instagram: string | null; twitter: string | null }[]> {
-  const empty = { email: null, linkedin: null, facebook: null, instagram: null, twitter: null };
+): Promise<{ email: string | null; emails: string[]; linkedin: string | null; facebook: string | null; instagram: string | null; twitter: string | null; tiktok: string | null; youtube: string | null }[]> {
+  const empty = { email: null, emails: [], linkedin: null, facebook: null, instagram: null, twitter: null, tiktok: null, youtube: null };
   try {
     const res = await fetch(`${SUPABASE_URL}/functions/v1/lead-search`, {
       method: 'POST',
@@ -76,10 +76,13 @@ export async function enrichBatch(
     const data = await res.json();
     return (data.results || []).map((r: any) => ({
       email:     r.email     || null,
+      emails:    Array.isArray(r.emails) ? r.emails : (r.email ? [r.email] : []),
       linkedin:  r.linkedin  || null,
       facebook:  r.facebook  || null,
       instagram: r.instagram || null,
       twitter:   r.twitter   || null,
+      tiktok:    r.tiktok    || null,
+      youtube:   r.youtube   || null,
     }));
   } catch {
     return leads.map(() => empty);

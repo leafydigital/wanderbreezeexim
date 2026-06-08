@@ -92,6 +92,8 @@ export function useLeads() {
       facebook:       lead.facebook   || null,
       instagram:      lead.instagram  || null,
       twitter:        lead.twitter    || null,
+      tiktok:         lead.tiktok     || null,
+      youtube:        lead.youtube    || null,
       products:       lead.products   || null,
       min_order:      lead.min_order  || null,
       certifications: lead.certifications || null,
@@ -117,7 +119,8 @@ export function useLeads() {
       facebook:       l.facebook   || null,
       instagram:      l.instagram  || null,
       twitter:        l.twitter    || null,
-      products:       l.products   || null,
+      tiktok:         l.tiktok     || null,
+      youtube:        l.youtube    || null,
       min_order:      l.min_order  || null,
       certifications: l.certifications || null,
     }));

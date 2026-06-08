@@ -1,6 +1,7 @@
 import React, { useRef, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
+import DynamicProductPage from './DynamicProductPage';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import WhatsAppFloat from './components/WhatsAppFloat';
@@ -118,6 +119,7 @@ function App() {
         <Route path="/black-pepper-export-from-india" element={<WebsiteLayout><BlackPepperExportFromIndia /></WebsiteLayout>} />
         <Route path="/thank-you" element={<WebsiteLayout><ThankYou /></WebsiteLayout>} />
         <Route path="*" element={<WebsiteLayout><NotFound /></WebsiteLayout>} />
+        <Route path="/products/:slug" element={<WebsiteLayout><DynamicProductPage /></WebsiteLayout>} />
 
       </Routes>
     </Router>

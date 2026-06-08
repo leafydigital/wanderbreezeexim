@@ -10,19 +10,20 @@
  *  - Limit selector (20 / 50 / 100 / All)
  */
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import {
   Search, Building2, Globe, Mail, Phone,
-  Linkedin, Facebook, Instagram, Twitter,
+  Linkedin, Facebook, Instagram, Twitter, Music2, Youtube,
   Bookmark, BookmarkCheck, Download, Copy, Check,
   ChevronDown, Loader2, RefreshCw, Filter,
-  MapPin, Tag, Star, ExternalLink,
+  MapPin, Tag, Star, ExternalLink, Edit2,
 } from 'lucide-react';
 import { useSearch, useLeads } from './useLeadRadar';
 import { enrichBatch } from './searchService';
 import { scrapeWebsite } from './emailScraper';
 import { exportCSV, exportExcel } from './exportUtils';
 import type { Lead, SearchMode } from './types';
+import { useSearchGuard } from '../../components/InactivityWarning';
 
 // ── Source badge ───────────────────────────────────────────────
 function SourceBadge({ src }: { src: string }) {
@@ -69,6 +70,42 @@ function CopyBtn({ text }: { text: string }) {
   );
 }
 
+// ── Inline editable cell ──────────────────────────────────────
+function EditCell({ value, onSave, placeholder, type = 'text' }: {
+  value?: string | null;
+  onSave: (v: string) => void;
+  placeholder?: string;
+  type?: string;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [val, setVal]         = useState(value || '');
+  useEffect(() => setVal(value || ''), [value]);
+
+  if (editing) return (
+    <input
+      autoFocus type={type} value={val}
+      onChange={e => setVal(e.target.value)}
+      onBlur={() => { setEditing(false); if (val !== (value || '')) onSave(val); }}
+      onKeyDown={e => {
+        if (e.key === 'Enter') { setEditing(false); if (val !== (value || '')) onSave(val); }
+        if (e.key === 'Escape') { setVal(value || ''); setEditing(false); }
+      }}
+      onClick={e => e.stopPropagation()}
+      style={{ border: '1px solid #0F9B6E', borderRadius: 6, padding: '3px 7px', fontSize: 11, outline: 'none', width: '100%', minWidth: 120, fontFamily: 'inherit' }}
+    />
+  );
+  return (
+    <div
+      onClick={e => { e.stopPropagation(); setEditing(true); }}
+      title="Click to edit"
+      style={{ cursor: 'text', fontSize: 11, color: val ? '#374151' : '#D1D5DB', display: 'flex', alignItems: 'center', gap: 3, minWidth: 60 }}
+    >
+      {val || <span style={{ fontStyle: 'italic', color: '#D1D5DB' }}>{placeholder || 'click to add'}</span>}
+      <Edit2 size={9} style={{ opacity: 0.3, flexShrink: 0 }} />
+    </div>
+  );
+}
+
 // ── Social icons row ──────────────────────────────────────────
 function SocialIcons({ lead }: { lead: Lead }) {
   const icons = [
@@ -76,83 +113,98 @@ function SocialIcons({ lead }: { lead: Lead }) {
     { url: lead.facebook,  Icon: Facebook,  color: '#1877F2', label: 'Facebook'  },
     { url: lead.instagram, Icon: Instagram, color: '#E1306C', label: 'Instagram' },
     { url: lead.twitter,   Icon: Twitter,   color: '#1DA1F2', label: 'Twitter/X' },
+    { url: lead.tiktok,    Icon: Music2,    color: '#010101', label: 'TikTok'    },
+    { url: lead.youtube,   Icon: Youtube,   color: '#FF0000', label: 'YouTube'   },
   ];
+  const found   = icons.filter(i => i.url);
+  const missing = icons.filter(i => !i.url);
   return (
     <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
-      {icons.map(({ url, Icon, color, label }) =>
-        url ? (
-          <a key={label} href={url} target="_blank" rel="noopener noreferrer" title={label}
-            style={{ color, lineHeight: 0 }}
-            onMouseEnter={e => (e.currentTarget.style.opacity = '0.7')}
-            onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>
-            <Icon size={14} />
-          </a>
-        ) : (
-          <span key={label} title={`${label} — not found`}
-            style={{ color: '#E5E7EB', lineHeight: 0 }}>
-            <Icon size={14} />
-          </span>
-        )
-      )}
+      {/* Found socials — clickable, colored */}
+      {found.map(({ url, Icon, color, label }) => (
+        <a key={label} href={url!} target="_blank" rel="noopener noreferrer" title={label}
+          style={{ color, lineHeight: 0, transition: 'opacity .15s' }}
+          onMouseEnter={e => (e.currentTarget.style.opacity = '0.7')}
+          onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>
+          <Icon size={14} />
+        </a>
+      ))}
+      {/* Missing socials — greyed out placeholders */}
+      {missing.map(({ Icon, label }) => (
+        <span key={label} title={`${label} — not found`}
+          style={{ color: '#E5E7EB', lineHeight: 0 }}>
+          <Icon size={14} />
+        </span>
+      ))}
     </div>
   );
 }
 
 // ── Location autocomplete ─────────────────────────────────────
+// ── Extend window type for Google Maps ───────────────────────
+declare global {
+  interface Window { google: any; }
+}
+
+// ── Location autocomplete — Google Places API ─────────────────
 function LocationAutocomplete({ value, onChange, style, placeholder }: {
   value: string; onChange: (v: string) => void;
   style?: React.CSSProperties; placeholder?: string;
 }) {
-  const [suggestions, setSuggestions] = useState<{ label: string; type: string }[]>([]);
-  const [show, setShow] = useState(false);
-  const debRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const inputRef     = useRef<HTMLInputElement>(null);
+  const autocomplete = useRef<any>(null);
+  const listenerRef  = useRef<any>(null);
 
-  async function fetch_(q: string) {
-    if (q.length < 2) { setSuggestions([]); return; }
-    try {
-      const res  = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=10&addressdetails=1&featuretype=country,city,state`, { headers: { 'Accept-Language': 'en' } });
-      const data: any[] = await res.json();
-      const seen = new Set<string>();
-      const results = data
-        .filter(item => {
-          const t = item.type || ''; const addr = item.address || {};
-          return ['country','city','town','municipality','administrative','state'].includes(t) && (addr.country || t === 'country');
-        })
-        .map(item => {
-          const addr = item.address || {}; const type = item.type || '';
-          let name: string; let badge: string;
-          if (type === 'country' || !addr.country) { name = addr.country || item.display_name.split(',')[0].trim(); badge = 'Country'; }
-          else if (addr.state && !addr.city) { name = `${addr.state}, ${addr.country}`; badge = 'State'; }
-          else { name = `${addr.city || addr.town || item.display_name.split(',')[0].trim()}, ${addr.country}`; badge = 'City'; }
-          return { label: name, type: badge };
-        })
-        .filter(r => { if (!r.label || seen.has(r.label)) return false; seen.add(r.label); return true; })
-        .slice(0, 6);
-      setSuggestions(results); setShow(results.length > 0);
-    } catch { setSuggestions([]); }
-  }
+  useEffect(() => {
+    function init() {
+      if (!inputRef.current || !window.google?.maps?.places) return;
+      autocomplete.current = new window.google.maps.places.Autocomplete(inputRef.current, {
+        types: ["geocode"],
+        fields: ["formatted_address", "name", "address_components"],
+      });
+      listenerRef.current = autocomplete.current.addListener("place_changed", () => {
+        const place = autocomplete.current!.getPlace();
+        if (place?.formatted_address) onChange(place.formatted_address);
+        else if (place?.name) onChange(place.name);
+      });
+    }
+
+    if (window.google?.maps?.places) {
+      init();
+    } else {
+      const iv = setInterval(() => {
+        if (window.google?.maps?.places) { clearInterval(iv); init(); }
+      }, 150);
+      return () => clearInterval(iv);
+    }
+    return () => {
+      if (listenerRef.current && window.google?.maps?.event)
+        window.google.maps.event.removeListener(listenerRef.current);
+    };
+  }, []);
+
+  // Sync external value changes (e.g. example button clicks) into the input
+  useEffect(() => {
+    if (inputRef.current && value !== inputRef.current.value) {
+      inputRef.current.value = value;
+    }
+  }, [value]);
 
   return (
-    <div style={{ position: 'relative', flex: 1 }}>
-      <Globe size={15} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#9CA3AF', zIndex: 1 }} />
-      <input style={{ ...style, paddingLeft: 36 }} placeholder={placeholder} value={value}
-        onChange={e => { onChange(e.target.value); if (debRef.current) clearTimeout(debRef.current); debRef.current = setTimeout(() => fetch_(e.target.value), 350); }}
-        onFocus={() => { if (suggestions.length) setShow(true); }}
-        onBlur={() => setTimeout(() => setShow(false), 150)}
-        autoComplete="off" />
-      {show && suggestions.length > 0 && (
-        <div style={{ position: 'fixed', top: 'auto', left: 'auto', zIndex: 99999, background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8, boxShadow: '0 8px 32px rgba(0,0,0,.18)', marginTop: 4, overflow: 'hidden', minWidth: 280, maxWidth: 420 }}>
-          {suggestions.map((s, i) => (
-            <div key={i} onMouseDown={() => { onChange(s.label); setSuggestions([]); setShow(false); }}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', cursor: 'pointer', fontSize: 13, borderBottom: i < suggestions.length - 1 ? '1px solid #f9fafb' : 'none' }}
-              onMouseEnter={e => (e.currentTarget.style.background = '#f9fafb')}
-              onMouseLeave={e => (e.currentTarget.style.background = '#fff')}>
-              <span style={{ color: '#111', display: 'flex', alignItems: 'center', gap: 6 }}><Globe size={12} style={{ color: '#9CA3AF' }} />{s.label}</span>
-              <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 8, background: s.type === 'Country' ? '#f0fdf4' : s.type === 'State' ? '#f3f4f6' : '#EFF6FF', color: s.type === 'Country' ? '#15803D' : s.type === 'State' ? '#6B7280' : '#2563EB' }}>{s.type}</span>
-            </div>
-          ))}
-        </div>
-      )}
+    <div style={{ position: "relative", flex: 1 }}>
+      <Globe size={15} style={{
+        position: "absolute", left: 12, top: "50%",
+        transform: "translateY(-50%)", color: "#9CA3AF",
+        zIndex: 1, pointerEvents: "none",
+      }} />
+      <input
+        ref={inputRef}
+        style={{ ...style, paddingLeft: 36 }}
+        placeholder={placeholder}
+        defaultValue={value}
+        onChange={e => onChange(e.target.value)}
+        autoComplete="off"
+      />
     </div>
   );
 }
@@ -188,6 +240,7 @@ function SearchProgress({ progress }: { progress: Record<string, string> }) {
 export default function SearchPage() {
   const { results, loading, progress, search, setResults } = useSearch();
   const { saveLead, saveMany } = useLeads();
+  const { setSearchRunning } = useSearchGuard();
 
   const [query,          setQuery]          = useState('');
   const [location,       setLocation]       = useState('');
@@ -203,75 +256,90 @@ export default function SearchPage() {
   const [sortDir,        setSortDir]        = useState<'asc' | 'desc' | null>(null);
   const [rowsPerPage,    setRowsPerPage]    = useState(25);
   const [currentPage,    setCurrentPage]    = useState(1);
+  const [isSearching,    setIsSearching]    = useState(false);
   const [isEnriching,    setIsEnriching]    = useState(false);
   const [enrichProgress, setEnrichProgress] = useState(0);
   const [enrichedCount,  setEnrichedCount]  = useState(0);
   const [totalCount,     setTotalCount]     = useState(0);
   const [searchDone,     setSearchDone]     = useState(false);
+  const [readyResults,   setReadyResults]   = useState<Lead[]>([]);
 
-  const BATCH_SIZE = 3; // 3 per call — edge fn processes these concurrently
+  const BATCH_SIZE = 3;
 
   // ── Search + auto-enrich ──────────────────────────────────────
   async function handleSearch(e: React.FormEvent) {
     e.preventDefault();
     if (!query.trim() || !location.trim()) return;
     setSelected(new Set()); setSaved(new Set()); setExpandedRow(null);
-    setResults([]); setIsEnriching(false); setEnrichProgress(0); setCurrentPage(1); setGlobalSearch(''); setSortDir(null);
-    setEnrichedCount(0); setTotalCount(0); setSearchDone(false);
+    setResults([]); setReadyResults([]); setIsEnriching(false);
+    setEnrichProgress(0); setCurrentPage(1); setGlobalSearch('');
+    setSortDir(null); setEnrichedCount(0); setTotalCount(0);
+    setSearchDone(false); setIsSearching(true);
 
     const leads = await search({ query: query.trim(), location: location.trim(), limit, mode, useOSM: false, useGoogle: true, useClaude: true });
+    setIsSearching(false);
     setSearchDone(true);
 
     if (leads?.length) {
       setTotalCount(leads.length);
+      setSearchRunning(true);
       await autoEnrich(leads, location.trim());
     }
+    setSearchRunning(false);
   }
 
-  // ── Progressive enrichment ───────────────────────────────────
-  // TWO parallel tracks:
-  // Track A — client-side email scraping (user's residential IP, bypasses Wix/blocks)
-  // Track B — edge function for social links (LinkedIn, Facebook, Instagram, Twitter)
+  // ── Enrichment — rows appear one-by-one only after fully enriched ─
   async function autoEnrich(leads: Lead[], loc: string) {
     setIsEnriching(true);
     setEnrichProgress(0);
     setEnrichedCount(0);
-
-    // Show raw results immediately
     setResults([...leads]);
-    const enriched = [...leads];
 
-    // Client-side scraping for BOTH email + socials
-    // Runs from user's browser (residential IP) — bypasses all blocks
-    // BATCH_SIZE leads processed concurrently per round
+    const enriched = [...leads];
+    let completedCount = 0;
+
     for (let i = 0; i < leads.length; i += BATCH_SIZE) {
       const batch = leads.slice(i, i + BATCH_SIZE);
 
       await Promise.all(batch.map(async (lead: Lead, j: number) => {
         const idx = i + j;
-        if (!lead.website) return;
 
-        try {
-          const result = await scrapeWebsite(lead.website);
-          enriched[idx] = {
-            ...enriched[idx],
-            email:     result.emails[0]  || enriched[idx].email     || null,
-            linkedin:  result.linkedin   || enriched[idx].linkedin  || null,
-            facebook:  result.facebook   || enriched[idx].facebook  || null,
-            instagram: result.instagram  || enriched[idx].instagram || null,
-            twitter:   result.twitter    || enriched[idx].twitter   || null,
-          };
-        } catch { /* silent */ }
+        if (lead.website) {
+          try {
+            const result = await scrapeWebsite(lead.website);
+            const existingEmails = enriched[idx].emails || (enriched[idx].email ? [enriched[idx].email as string] : []);
+            const mergedEmails = [...new Set([...result.emails, ...existingEmails])].filter(Boolean);
+            enriched[idx] = {
+              ...enriched[idx],
+              email:     mergedEmails[0]   || null,
+              emails:    mergedEmails,
+              linkedin:  result.linkedin   || enriched[idx].linkedin  || null,
+              facebook:  result.facebook   || enriched[idx].facebook  || null,
+              instagram: result.instagram  || enriched[idx].instagram || null,
+              twitter:   result.twitter    || enriched[idx].twitter   || null,
+              tiktok:    result.tiktok     || enriched[idx].tiktok    || null,
+              youtube:   result.youtube    || enriched[idx].youtube   || null,
+            };
+          } catch { /* silent */ }
+        }
+
+        // Only add to visible table after this row is fully done
+        completedCount++;
+        const snapshot = enriched[idx];
+        setReadyResults(prev => {
+          const next = [...prev];
+          next[idx] = snapshot;
+          return next.filter(Boolean) as Lead[];
+        });
+        setEnrichedCount(completedCount);
+        setEnrichProgress(Math.round((completedCount / leads.length) * 100));
       }));
-
-      setResults([...enriched]);
-      const done = Math.min(i + BATCH_SIZE, leads.length);
-      setEnrichedCount(done);
-      setEnrichProgress(Math.round((done / leads.length) * 100));
     }
 
+    setResults([...enriched]);
     setIsEnriching(false);
     setEnrichProgress(100);
+    setSearchRunning(false);
   }
 
   // ── Save handlers ─────────────────────────────────────────────
@@ -296,7 +364,7 @@ export default function SearchPage() {
   }
 
   // ── Filters + Search + Sort + Pagination ─────────────────────
-  const filteredResults = results.filter(r => {
+  const filteredResults = readyResults.filter(r => {
     if (filterEmail   === true  && !r.email)   return false;
     if (filterEmail   === false &&  r.email)   return false;
     if (filterWebsite === true  && !r.website) return false;
@@ -336,7 +404,7 @@ export default function SearchPage() {
   // ── Styles ────────────────────────────────────────────────────
   const S = {
     page:  { fontFamily: "'DM Sans','Inter',sans-serif", color: '#1a1a1a' } as React.CSSProperties,
-    card:  { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, overflow: 'hidden' } as React.CSSProperties,
+    card:  { background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12 } as React.CSSProperties,
     input: { border: '1px solid #e5e7eb', borderRadius: 8, padding: '10px 14px', fontSize: 14, outline: 'none', width: '100%', background: '#fff', boxSizing: 'border-box' as const } as React.CSSProperties,
     th:    { padding: '9px 12px', fontSize: 11, fontWeight: 600, color: '#6B7280', letterSpacing: '0.5px', textTransform: 'uppercase' as const, textAlign: 'left' as const, borderBottom: '1px solid #f3f4f6', background: '#fafafa', whiteSpace: 'nowrap' as const } as React.CSSProperties,
     td:    { padding: '10px 12px', fontSize: 13, borderBottom: '1px solid #f9fafb', verticalAlign: 'middle' as const } as React.CSSProperties,
@@ -391,45 +459,70 @@ export default function SearchPage() {
               </select>
             </div>
 
-            <button type="submit" disabled={loading || isEnriching}
-              style={{ ...S.btn, background: loading || isEnriching ? '#d1fae5' : '#0F9B6E', color: '#fff', padding: '10px 20px', minWidth: 120 }}>
-              {loading ? <><Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> Searching...</>
+            <button type="submit" disabled={loading || isSearching || isEnriching}
+              style={{ ...S.btn, background: loading || isSearching || isEnriching ? '#d1fae5' : '#0F9B6E', color: '#fff', padding: '10px 20px', minWidth: 120 }}>
+              {isSearching ? <><Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> Finding leads...</>
                 : isEnriching ? <><Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> Enriching...</>
+                : loading ? <><Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> Searching...</>
                 : <><Search size={14} /> Search</>}
             </button>
           </div>
 
           {/* Progress */}
-          {(loading || isEnriching) && (
-            <div style={{ marginTop: 14, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-              <SearchProgress progress={progress} />
-              {isEnriching && totalCount > 0 && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1 }}>
-                  <div style={{ flex: 1, background: '#f3f4f6', borderRadius: 6, height: 6, overflow: 'hidden', maxWidth: 240 }}>
-                    <div style={{ width: enrichProgress + '%', height: '100%', background: 'linear-gradient(90deg,#0F9B6E,#22C55E)', borderRadius: 6, transition: 'width 0.4s ease' }} />
-                  </div>
-                  <span style={{ fontSize: 12, color: '#6B7280', whiteSpace: 'nowrap' }}>
-                    Fetching emails — {enrichedCount}/{totalCount}
+          {(loading || isSearching || isEnriching) && (
+            <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {/* Stage 1 — Google Maps fetching */}
+              {(loading || isSearching) && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: '#F0FDF4', borderRadius: 8, border: '1px solid #BBF7D0' }}>
+                  <Loader2 size={14} color="#0F9B6E" style={{ animation: 'spin 1s linear infinite', flexShrink: 0 }} />
+                  <span style={{ fontSize: 13, color: '#15803D', fontWeight: 600 }}>
+                    Fetching businesses from Google Maps…
+                  </span>
+                  <span style={{ fontSize: 12, color: '#6B7280', marginLeft: 4 }}>
+                    This takes 10–20 seconds
                   </span>
                 </div>
               )}
+              {/* Stage 2 — Email + social enrichment */}
+              {isEnriching && totalCount > 0 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: '#FFFBEB', borderRadius: 8, border: '1px solid #FDE68A' }}>
+                  <Loader2 size={14} color="#D97706" style={{ animation: 'spin 1s linear infinite', flexShrink: 0 }} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
+                      <span style={{ fontSize: 13, color: '#92400E', fontWeight: 600 }}>
+                        Fetching emails & socials — rows appear as they complete
+                      </span>
+                      <span style={{ fontSize: 12, color: '#92400E', fontWeight: 700 }}>
+                        {enrichedCount}/{totalCount}
+                      </span>
+                    </div>
+                    <div style={{ background: '#FEF3C7', borderRadius: 6, height: 6, overflow: 'hidden' }}>
+                      <div style={{ width: enrichProgress + '%', height: '100%', background: 'linear-gradient(90deg,#D97706,#F59E0B)', borderRadius: 6, transition: 'width 0.3s ease' }} />
+                    </div>
+                  </div>
+                </div>
+              )}
+              {/* SearchProgress dots */}
+              <SearchProgress progress={progress} />
             </div>
           )}
         </form>
       </div>
 
       {/* ── Results toolbar ── */}
-      {results.length > 0 && (
+      {(readyResults.length > 0 || isEnriching) && (
         <div style={{ marginBottom: 10 }}>
 
           {/* Row 1: Stats + Export */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, flexWrap: 'wrap' }}>
             <span style={{ fontSize: 13, fontWeight: 600, color: '#111' }}>
-              {results.length} leads found
-              {sortedResults.length !== results.length && <span style={{ color: '#6B7280', fontWeight: 400 }}> · {sortedResults.length} filtered</span>}
+              {isEnriching
+                ? <>{enrichedCount} of {totalCount} leads ready<span style={{ color: '#6B7280', fontWeight: 400 }}> · more loading…</span></>
+                : <>{readyResults.length} leads found{sortedResults.length !== readyResults.length && <span style={{ color: '#6B7280', fontWeight: 400 }}> · {sortedResults.length} filtered</span>}</>
+              }
             </span>
             {isEnriching
-              ? <span style={{ fontSize: 12, color: '#F59E0B' }}>⏳ Fetching data ({enrichedCount}/{totalCount})…</span>
+              ? <span style={{ fontSize: 12, color: '#D97706' }}>⏳ Enriching {enrichedCount}/{totalCount}…</span>
               : <span style={{ fontSize: 12, color: '#16A34A' }}>✓ {emailCount} with email · {websiteCount} with website</span>
             }
             <div style={{ flex: 1 }} />
@@ -439,11 +532,11 @@ export default function SearchPage() {
                 <Bookmark size={13} /> Save {selected.size}
               </button>
             )}
-            <button onClick={() => exportCSV(sortedResults)}
+            <button onClick={() => exportCSV(sortedResults, query, location)}
               style={{ ...S.btn, background: '#f3f4f6', color: '#374151', fontSize: 12, padding: '7px 12px' }}>
               <Download size={13} /> CSV
             </button>
-            <button onClick={() => exportExcel(sortedResults)}
+            <button onClick={() => exportExcel(sortedResults, query, location)}
               style={{ ...S.btn, background: '#f3f4f6', color: '#374151', fontSize: 12, padding: '7px 12px' }}>
               <Download size={13} /> Excel
             </button>
@@ -524,7 +617,7 @@ export default function SearchPage() {
 
       {/* ── Results table ── */}
       {displayResults.length > 0 && (
-        <div style={S.card}>
+        <div style={{ ...S.card, overflow: 'hidden' }}>
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
               <colgroup>
@@ -589,32 +682,61 @@ export default function SearchPage() {
                         </div>
                       </td>
 
-                      {/* Email */}
+                      {/* Email — inline editable when missing */}
                       <td style={S.td}>
-                        {lead.email ? (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                            <Mail size={12} style={{ color: '#0F9B6E', flexShrink: 0 }} />
-                            <span style={{ fontSize: 12, color: '#374151', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 160 }} title={lead.email}>
-                              {lead.email}
-                            </span>
-                            <CopyBtn text={lead.email} />
-                          </div>
-                        ) : isEnriching ? (
-                          <span style={{ fontSize: 11, color: '#D1D5DB', fontStyle: 'italic' }}>fetching…</span>
-                        ) : (
-                          <span style={{ fontSize: 11, color: '#D1D5DB' }}>—</span>
-                        )}
+                        {(() => {
+                          const allEmails = lead.emails?.length ? lead.emails : (lead.email ? [lead.email] : []);
+                          return (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                              {allEmails.map((em, ei) => (
+                                <div key={ei} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                  <Mail size={11} style={{ color: '#0F9B6E', flexShrink: 0 }} />
+                                  <span style={{ fontSize: 11, color: '#374151', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 150 }} title={em}>{em}</span>
+                                  <CopyBtn text={em} />
+                                </div>
+                              ))}
+                              {allEmails.length === 0 && (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                  <Mail size={11} style={{ color: '#D1D5DB', flexShrink: 0 }} />
+                                  <EditCell
+                                    value=""
+                                    placeholder={isEnriching ? 'fetching…' : 'add email'}
+                                    type="email"
+                                    onSave={v => {
+                                      if (!v.trim()) return;
+                                      setReadyResults(prev => prev.map((r, i) =>
+                                        i === idx ? { ...r, email: v.trim(), emails: [v.trim()] } : r
+                                      ));
+                                    }}
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
                       </td>
 
-                      {/* Phone */}
+                      {/* Phone — inline editable when missing */}
                       <td style={S.td}>
                         {lead.phone ? (
                           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                             <Phone size={11} style={{ color: '#6B7280', flexShrink: 0 }} />
-                            <span style={{ fontSize: 12, color: '#374151', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{lead.phone}</span>
+                            <EditCell
+                              value={lead.phone}
+                              onSave={v => setReadyResults(prev => prev.map((r, i) => i === idx ? { ...r, phone: v } : r))}
+                            />
                             <CopyBtn text={lead.phone} />
                           </div>
-                        ) : <span style={{ color: '#D1D5DB', fontSize: 11 }}>—</span>}
+                        ) : (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <Phone size={11} style={{ color: '#D1D5DB', flexShrink: 0 }} />
+                            <EditCell
+                              value=""
+                              placeholder="add phone"
+                              onSave={v => setReadyResults(prev => prev.map((r, i) => i === idx ? { ...r, phone: v } : r))}
+                            />
+                          </div>
+                        )}
                       </td>
 
                       {/* Country/address */}
@@ -665,12 +787,18 @@ export default function SearchPage() {
                                 <div style={{ fontSize: 13, color: '#374151' }}>{lead.address}</div>
                               </div>
                             )}
-                            {lead.email && (
+                            {(lead.emails?.length ? lead.emails : (lead.email ? [lead.email] : [])).length > 0 && (
                               <div>
-                                <div style={{ fontSize: 10, fontWeight: 700, color: '#9CA3AF', letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: 4 }}>Email</div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                                  <a href={`mailto:${lead.email}`} style={{ fontSize: 13, color: '#0F9B6E' }}>{lead.email}</a>
-                                  <CopyBtn text={lead.email} />
+                                <div style={{ fontSize: 10, fontWeight: 700, color: '#9CA3AF', letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: 4 }}>
+                                  Email{(lead.emails?.length ?? 0) > 1 ? `s (${lead.emails!.length})` : ''}
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                                  {(lead.emails?.length ? lead.emails : (lead.email ? [lead.email] : [])).map((em, ei) => (
+                                    <div key={ei} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                      <a href={`mailto:${em}`} style={{ fontSize: 13, color: '#0F9B6E' }}>{em}</a>
+                                      <CopyBtn text={em} />
+                                    </div>
+                                  ))}
                                 </div>
                               </div>
                             )}
@@ -782,7 +910,7 @@ export default function SearchPage() {
       )}
 
       {/* ── Empty / initial state ── */}
-      {!loading && !isEnriching && results.length === 0 && searchDone && (
+      {!loading && !isSearching && !isEnriching && readyResults.length === 0 && searchDone && (
         <div style={{ ...S.card, padding: '60px 20px', textAlign: 'center', color: '#9CA3AF' }}>
           <Building2 size={40} style={{ margin: '0 auto 12px', opacity: 0.3, display: 'block' }} />
           <p style={{ fontSize: 15, fontWeight: 500, color: '#374151' }}>No results found</p>
@@ -790,7 +918,7 @@ export default function SearchPage() {
         </div>
       )}
 
-      {!loading && !isEnriching && results.length === 0 && !searchDone && (
+      {!loading && !isSearching && !isEnriching && readyResults.length === 0 && !searchDone && (
         <div style={{ ...S.card, padding: '60px 20px', textAlign: 'center' }}>
           <Search size={40} style={{ margin: '0 auto 16px', opacity: 0.15, display: 'block' }} />
           <p style={{ fontSize: 16, fontWeight: 600, color: '#374151', marginBottom: 8 }}>

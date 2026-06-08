@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { supabase } from './supabase';
 
 export interface Role {
@@ -26,13 +26,12 @@ export interface AppUser {
 
 // ─────────────────────────────────────────────────────────────
 // SESSION STRATEGY
-//  • sessionStorage (not localStorage) — clears when browser/tab closes
-//  • 30-minute inactivity timeout — auto logout if no mouse/key/touch
-//  • On load: if sessionStorage has user, restore. Otherwise → Login.
+//  • sessionStorage — clears when browser/tab closes
+//  • NO inactivity timeout — session stays alive until:
+//      (a) user manually clicks "Sign Out"
+//      (b) browser tab / window is closed
 // ─────────────────────────────────────────────────────────────
-const STORAGE_KEY        = 'wbe_session';
-const INACTIVITY_MINUTES = 30;
-const INACTIVITY_MS      = INACTIVITY_MINUTES * 60 * 1000;
+const STORAGE_KEY = 'wbe_session';
 
 interface AuthContextValue {
   user:        AppUser | null;
@@ -52,43 +51,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [role,    setRole]    = useState<Role | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Inactivity timer ref
-  const inactivityTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
   // ── Sign out ──────────────────────────────────────────────
   const signOut = useCallback(async () => {
-    if (inactivityTimer.current) clearTimeout(inactivityTimer.current);
     await supabase.auth.signOut();
     setUser(null);
     setRole(null);
     sessionStorage.removeItem(STORAGE_KEY);
   }, []);
 
-  // ── Reset inactivity timer on every user action ───────────
-  const resetTimer = useCallback(() => {
-    if (inactivityTimer.current) clearTimeout(inactivityTimer.current);
-    inactivityTimer.current = setTimeout(() => {
-      // Auto logout after INACTIVITY_MINUTES of no activity
-      signOut();
-    }, INACTIVITY_MS);
-  }, [signOut]);
-
-  // ── Attach/detach activity listeners ─────────────────────
-  useEffect(() => {
-    if (!user) return;
-
-    const events = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'click'];
-    events.forEach(e => window.addEventListener(e, resetTimer, { passive: true }));
-    resetTimer(); // Start timer immediately on login
-
-    return () => {
-      events.forEach(e => window.removeEventListener(e, resetTimer));
-      if (inactivityTimer.current) clearTimeout(inactivityTimer.current);
-    };
-  }, [user, resetTimer]);
-
   // ── On mount: restore session from sessionStorage ─────────
-  // sessionStorage is cleared automatically when browser/tab closes
+  // sessionStorage is cleared automatically when browser/tab closes,
+  // so session never persists across separate browser sessions.
   useEffect(() => {
     const stored = sessionStorage.getItem(STORAGE_KEY);
     if (stored) {
@@ -139,7 +112,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(appUser);
       setRole((appUser.roles as Role) ?? null);
 
-      // ✅ sessionStorage — NOT localStorage — clears on browser close
+      // sessionStorage clears on browser close — not localStorage
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(appUser));
       return null;
     } catch {

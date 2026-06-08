@@ -1,0 +1,2 @@
+[functions.lead-search]
+verify_jwt = false
