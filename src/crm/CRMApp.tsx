@@ -21,6 +21,7 @@ import Users from './pages/Users';
 import Roles from './pages/Roles';
 import LeadRadar from './pages/LeadRadar';
 import OutreachTracker from './pages/OutreachTracker';
+import CompanySettings from './pages/CompanySettings';
 import InactivityWarning from './components/InactivityWarning';
 import './crm.css';
 
@@ -43,7 +44,7 @@ function CRMInner() {
 
   const firstAccessible = (
     ['dashboard','customers','suppliers','products','proforma','invoices',
-     'expenses','pricing','documents','leadradar','outreachtracker','users','roles'] as Page[]
+     'expenses','pricing','documents','leadradar','outreachtracker','users','roles','companysettings'] as Page[]
   ).find(p => can(p));
 
   const effectivePage = can(activePage) ? activePage : (firstAccessible ?? 'dashboard');
@@ -64,6 +65,7 @@ function CRMInner() {
         <div className={effectivePage === 'roles'           ? '' : 'hidden'}><Roles /></div>
         <div className={effectivePage === 'leadradar'       ? '' : 'hidden'}><LeadRadar /></div>
         <div className={effectivePage === 'outreachtracker' ? '' : 'hidden'}><OutreachTracker /></div>
+        <div className={effectivePage === 'companysettings' ? '' : 'hidden'}><CompanySettings /></div>
       </Layout>
     </InactivityWarning>
   );

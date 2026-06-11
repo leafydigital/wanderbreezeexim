@@ -4,7 +4,7 @@ import {
   DollarSign, Calculator, FolderOpen, Menu, X,
   ChevronRight, Package, Shield, UserCog, LogOut, ChevronDown,
   type LucideIcon,
-  Radar, Network, AlertTriangle, Search,
+  Radar, Network, AlertTriangle, Search, Building2,
 } from 'lucide-react';
 import { useAuth } from '../lib/auth';
 import { useGuardedSignOut } from './InactivityWarning';
@@ -22,7 +22,8 @@ export type Page =
   | 'users'
   | 'roles'
   | 'leadradar'
-  | 'outreachtracker';
+  | 'outreachtracker'
+  | 'companysettings';
 
 interface LayoutProps {
   activePage: Page;
@@ -51,6 +52,7 @@ const navItems: NavItem[] = [
   { id: 'documents', label: 'Documents', icon: FolderOpen, module: 'documents' },
   { id: 'users', label: 'User Management', icon: UserCog, module: 'users' },
   { id: 'roles', label: 'Role Management', icon: Shield, module: 'roles' },
+  { id: 'companysettings', label: 'Company Settings', icon: Building2, module: 'companysettings' },
   { id: 'leadradar',        label: 'LeadRadar',        icon: Radar,   module: 'leadradar'        },
   { id: 'outreachtracker', label: 'Outreach Tracker', icon: Network, module: 'outreachtracker'  },
 ];
@@ -99,7 +101,7 @@ export default function Layout({ activePage, onNavigate, children }: LayoutProps
           {/* Main modules */}
           <div className="mb-3">
             <p className="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Main</p>
-            {visibleItems.filter(n => !['users', 'roles'].includes(n.id)).map(({ id, label, icon: Icon }) => {
+            {visibleItems.filter(n => !['users', 'roles', 'companysettings'].includes(n.id)).map(({ id, label, icon: Icon }) => {
               const active = activePage === id;
               return (
                 <button
@@ -119,10 +121,10 @@ export default function Layout({ activePage, onNavigate, children }: LayoutProps
           </div>
 
           {/* Admin modules */}
-          {visibleItems.some(n => ['users', 'roles'].includes(n.id)) && (
+          {visibleItems.some(n => ['users', 'roles', 'companysettings'].includes(n.id)) && (
             <div>
               <p className="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Administration</p>
-              {visibleItems.filter(n => ['users', 'roles'].includes(n.id)).map(({ id, label, icon: Icon }) => {
+              {visibleItems.filter(n => ['users', 'roles', 'companysettings'].includes(n.id)).map(({ id, label, icon: Icon }) => {
                 const active = activePage === id;
                 return (
                   <button

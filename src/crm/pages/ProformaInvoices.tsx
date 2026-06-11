@@ -5,6 +5,52 @@ import Modal from '../components/Modal';
 import StatusBadge from '../components/StatusBadge';
 import { formatCurrency, formatDate, today } from '../lib/utils';
 
+interface CompanyProfile {
+  company_name: string;
+  address: string;
+  city: string;
+  state: string;
+  pincode: string;
+  country: string;
+  email: string;
+  phone: string;
+  website: string;
+  gstin: string;
+  iec_code: string;
+  fssai: string;
+  spices_board_rcmc: string;
+}
+
+interface BankAccount {
+  id?: string;
+  bank_name: string;
+  branch: string;
+  account_name: string;
+  account_number: string;
+  ifsc_code: string;
+  swift_code: string;
+  is_active: boolean;
+}
+
+async function toBase64(url: string): Promise<string> {
+  try {
+    // Use absolute URL so it works from window.open print context
+    const absoluteUrl = url.startsWith('http') ? url : `${window.location.origin}${url}`;
+    const res = await fetch(absoluteUrl);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const blob = await res.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch (e) {
+    console.warn('Logo base64 failed:', e);
+    return '';
+  }
+}
+
 interface LineItemForm {
   id?: string;
   product_name: string;
@@ -47,6 +93,8 @@ export default function ProformaInvoices() {
   const [editId, setEditId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [companyProfile, setCompanyProfile] = useState<CompanyProfile | null>(null);
+  const [activeBank, setActiveBank] = useState<BankAccount | null>(null);
   const printRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -58,12 +106,16 @@ export default function ProformaInvoices() {
 
   async function fetchData() {
     setLoading(true);
-    const [pisRes, custRes] = await Promise.all([
+    const [pisRes, custRes, profRes, bankRes] = await Promise.all([
       supabase.from('proforma_invoices').select('*, customers(*), pi_line_items(*)').order('created_at', { ascending: false }),
       supabase.from('customers').select('id, customer_name, company_name, country, type, address, email, phone').order('customer_name'),
+      supabase.from('company_settings').select('*').limit(1).maybeSingle(),
+      supabase.from('bank_accounts').select('*').eq('is_active', true).limit(1).maybeSingle(),
     ]);
     setPIs((pisRes.data as ProformaInvoice[]) ?? []);
     setCustomers((custRes.data as Customer[]) ?? []);
+    if (profRes.data) setCompanyProfile(profRes.data as CompanyProfile);
+    if (bankRes.data) setActiveBank(bankRes.data as BankAccount);
     setLoading(false);
   }
 
@@ -166,6 +218,13 @@ export default function ProformaInvoices() {
     setModalOpen(true);
   }
 
+  async function openPreview(pi: ProformaInvoice) {
+    // Re-fetch active bank fresh every time so newly added banks appear
+    const { data } = await supabase.from('bank_accounts').select('*').eq('is_active', true).limit(1).maybeSingle();
+    if (data) setActiveBank(data as BankAccount);
+    setPreviewPI(pi);
+  }
+
   async function openAdd() {
     const { count } = await supabase.from('proforma_invoices').select('id', { count: 'exact', head: true });
     const year = new Date().getFullYear();
@@ -176,13 +235,24 @@ export default function ProformaInvoices() {
     setModalOpen(true);
   }
 
-  function handlePrint() {
+  async function handlePrint() {
     const content = printRef.current?.innerHTML;
     if (!content) return;
-    const w = window.open('', '', 'width=900,height=700');
+    const logoBase64 = await toBase64('/wander_breeze_exim_logo_-_black_for_stamp.png');
+    const logoTag = logoBase64
+      ? `<img src="${logoBase64}" style="width: 300px;height: 300px; margin-top: auto; margin-bottom: -85px;" alt="Wander Breeze Exim" />`
+      : `<div style="font-size:22px;font-weight:700;color:#0f766e;">WANDER BREEZE EXIM</div>`;
+    const fixedContent = content
+      .replace(/<img[^>]*wander_breeze_exim_logo[^>]*>/gi, logoTag)
+      .replace(/src="\/wander_breeze_exim_logo[^"]*"/gi, `src="${logoBase64}"`);
+    const customerName = previewPI
+      ? ((previewPI.customers as any)?.company_name || (previewPI.customers as any)?.customer_name || 'Invoice')
+      : 'Invoice';
+    const title = `Proforma Invoice - ${customerName}`;
+    const w = window.open('', '_blank', 'width=900,height=700');
     if (!w) return;
     w.document.write(`
-      <html><head><title>Proforma Invoice</title>
+      <html><head><title>&nbsp;</title>
       <style>
         body { font-family: Arial, sans-serif; color: #1a1a1a; margin: 0; padding: 20px; }
         table { width: 100%; border-collapse: collapse; }
@@ -190,13 +260,24 @@ export default function ProformaInvoices() {
         th { background: #f1f5f9; }
         td { border-bottom: 1px solid #e2e8f0; }
         .right { text-align: right; }
-        .header { display: flex; justify-content: space-between; margin-bottom: 24px; }
         .total-row td { font-weight: bold; background: #f8fafc; }
+        img { max-width: 100%; }
+        @page { size: A4; margin: 10mm; }
+        @media print {
+          html, body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
       </style>
-      </head><body>${content}</body></html>
+      </head><body>${fixedContent}
+      <script>
+        window.onload = function() {
+          document.title = '\u00A0';
+          window.focus();
+          setTimeout(function() { window.print(); window.close(); }, 400);
+        };
+      <\/script>
+      </body></html>
     `);
     w.document.close();
-    w.print();
   }
 
   const filtered = pis.filter(p =>
@@ -263,7 +344,7 @@ export default function ProformaInvoices() {
                     </td>
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-1 justify-end">
-                        <button onClick={() => setPreviewPI(pi)} className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors" title="Preview"><Eye size={14} /></button>
+                        <button onClick={() => openPreview(pi)} className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors" title="Preview"><Eye size={14} /></button>
                         <button onClick={() => openEdit(pi)} className="p-1.5 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-md transition-colors" title="Edit"><Edit2 size={14} /></button>
                         <button onClick={() => setDeleteId(pi.id)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors" title="Delete"><Trash2 size={14} /></button>
                       </div>
@@ -428,7 +509,7 @@ export default function ProformaInvoices() {
             </button>
           </div>
           <div ref={printRef}>
-            <PIPreview pi={previewPI} />
+            <PIPreview pi={previewPI} companyProfile={companyProfile} activeBank={activeBank} />
           </div>
         </Modal>
       )}
@@ -445,19 +526,47 @@ export default function ProformaInvoices() {
   );
 }
 
-function PIPreview({ pi }: { pi: ProformaInvoice }) {
+function PIPreview({ pi, companyProfile, activeBank }: {
+  pi: ProformaInvoice;
+  companyProfile: CompanyProfile | null;
+  activeBank: BankAccount | null;
+}) {
   const customer = pi.customers as Customer | undefined;
   const items = pi.pi_line_items ?? [];
   const isDomestic = customer?.type === 'Domestic';
   const cur = pi.currency;
+  const co = companyProfile;
+  const fullAddress = co
+    ? [co.address, co.city, co.state, co.pincode, co.country].filter(Boolean).join(', ')
+    : 'Thiruvananthapuram, Kerala, India';
 
   return (
     <div style={{ fontFamily: 'Arial, sans-serif', fontSize: 13, color: '#1a1a1a' }}>
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24, alignItems: 'center' }}>
         <div>
-          <div style={{ fontSize: 22, fontWeight: 700, color: '#0f766e' }}>WANDER BREEZE EXIM</div>
-          <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>Export CRM</div>
+          <div style={{  }}>
+            <img
+              src="/wander_breeze_exim_logo_-_black_for_stamp.png"
+              alt="Wander Breeze Exim"
+              //style={{  all: 'initial' as any, display: 'block', width: 110, height: 110, objectFit: 'contain' as any }}
+              style={{width: 300, height: 300, marginTop: 'auto', marginBottom: '-85px'}} 
+              onError={(e) => {
+                const t = e.currentTarget as HTMLImageElement;
+                t.style.display = 'none';
+                const fallback = t.nextSibling as HTMLElement;
+                if (fallback) fallback.style.display = 'block';
+              }}
+            />
+          </div>
+          <div style={{ display: 'none', fontSize: 22, fontWeight: 700, color: '#0f766e' }}>WANDER BREEZE EXIM</div>
+          <div style={{ fontSize: 11, color: '#475569', marginTop: 2, lineHeight: 1.7 }}>
+            {co?.company_name || 'Wander Breeze Exim Pvt Ltd'}<br />
+            {fullAddress}<br />
+            {co?.email && <>{co.email}<br /></>}
+            {co?.phone && <>{co.phone}<br /></>}
+            {co?.website && <>{co.website}</>}
+          </div>
         </div>
         <div style={{ textAlign: 'right' }}>
           <div style={{ fontSize: 18, fontWeight: 700 }}>PROFORMA INVOICE</div>
@@ -467,7 +576,7 @@ function PIPreview({ pi }: { pi: ProformaInvoice }) {
         </div>
       </div>
 
-      {/* Buyer/Shipper */}
+      {/* Buyer / Shipment */}
       <div style={{ display: 'flex', gap: 24, marginBottom: 20 }}>
         <div style={{ flex: 1, background: '#f8fafc', padding: '12px 16px', borderRadius: 8 }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', marginBottom: 6 }}>Buyer / Consignee</div>
@@ -486,38 +595,14 @@ function PIPreview({ pi }: { pi: ProformaInvoice }) {
           <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', marginBottom: 6 }}>Shipment Details</div>
           {!isDomestic && (
             <>
-              <div style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
-                <span style={{ color: '#64748b', fontSize: 12 }}>Incoterms:</span>
-                <span style={{ fontWeight: 600 }}>{pi.incoterms}</span>
-              </div>
-              <div style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
-                <span style={{ color: '#64748b', fontSize: 12 }}>Currency:</span>
-                <span style={{ fontWeight: 600 }}>{pi.currency}</span>
-              </div>
-              <div style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
-                <span style={{ color: '#64748b', fontSize: 12 }}>Origin:</span>
-                <span>{pi.country_of_origin}</span>
-              </div>
-              {pi.port_of_loading && (
-                <div style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
-                  <span style={{ color: '#64748b', fontSize: 12 }}>Port of Loading:</span>
-                  <span>{pi.port_of_loading}</span>
-                </div>
-              )}
-              {pi.port_of_discharge && (
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <span style={{ color: '#64748b', fontSize: 12 }}>Port of Discharge:</span>
-                  <span>{pi.port_of_discharge}</span>
-                </div>
-              )}
+              <div style={{ display: 'flex', gap: 8, marginBottom: 4 }}><span style={{ color: '#64748b', fontSize: 12 }}>Incoterms:</span><span style={{ fontWeight: 600 }}>{pi.incoterms}</span></div>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 4 }}><span style={{ color: '#64748b', fontSize: 12 }}>Currency:</span><span style={{ fontWeight: 600 }}>{pi.currency}</span></div>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 4 }}><span style={{ color: '#64748b', fontSize: 12 }}>Origin:</span><span>{pi.country_of_origin}</span></div>
+              {pi.port_of_loading && <div style={{ display: 'flex', gap: 8, marginBottom: 4 }}><span style={{ color: '#64748b', fontSize: 12 }}>Port of Loading:</span><span>{pi.port_of_loading}</span></div>}
+              {pi.port_of_discharge && <div style={{ display: 'flex', gap: 8, marginBottom: 4 }}><span style={{ color: '#64748b', fontSize: 12 }}>Port of Discharge:</span><span>{pi.port_of_discharge}</span></div>}
             </>
           )}
-          {pi.payment_terms && (
-            <div style={{ display: 'flex', gap: 8 }}>
-              <span style={{ color: '#64748b', fontSize: 12 }}>Payment:</span>
-              <span>{pi.payment_terms}</span>
-            </div>
-          )}
+          {pi.payment_terms && <div style={{ display: 'flex', gap: 8 }}><span style={{ color: '#64748b', fontSize: 12 }}>Payment:</span><span>{pi.payment_terms}</span></div>}
         </div>
       </div>
 
@@ -557,14 +642,33 @@ function PIPreview({ pi }: { pi: ProformaInvoice }) {
       </table>
 
       {pi.notes && (
-        <div style={{ background: '#f8fafc', padding: '10px 14px', borderRadius: 6, marginTop: 12 }}>
+        <div style={{ background: '#f8fafc', padding: '10px 14px', borderRadius: 6, marginBottom: 16 }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', marginBottom: 4 }}>Notes</div>
           <div style={{ fontSize: 12, color: '#475569' }}>{pi.notes}</div>
         </div>
       )}
 
-      <div style={{ marginTop: 24, textAlign: 'center', color: '#94a3b8', fontSize: 11, borderTop: '1px solid #e2e8f0', paddingTop: 12 }}>
-        This is a computer-generated proforma invoice. | Wander Breeze Exim
+      {/* Bank Details */}
+      {activeBank && !isDomestic && (
+        <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8, padding: '12px 16px', marginBottom: 16 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', marginBottom: 8 }}>Bank Details</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 24px', fontSize: 12 }}>
+            <div><span style={{ color: '#64748b' }}>Bank Name: </span><span style={{ fontWeight: 600 }}>{activeBank.bank_name}</span></div>
+            <div><span style={{ color: '#64748b' }}>Branch: </span><span>{activeBank.branch}</span></div>
+            <div><span style={{ color: '#64748b' }}>Account Name: </span><span style={{ fontWeight: 600 }}>{activeBank.account_name}</span></div>
+            <div><span style={{ color: '#64748b' }}>Account Number: </span><span style={{ fontWeight: 600 }}>{activeBank.account_number}</span></div>
+            <div><span style={{ color: '#64748b' }}>IFSC Code: </span><span>{activeBank.ifsc_code}</span></div>
+            <div><span style={{ color: '#64748b' }}>SWIFT Code: </span><span>{activeBank.swift_code}</span></div>
+          </div>
+        </div>
+      )}
+
+      {/* Footer */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 24, borderTop: '1px solid #e2e8f0', paddingTop: 12 }}>
+        <div style={{ color: '#94a3b8', fontSize: 11 }}>This is a computer-generated proforma invoice. | Wander Breeze Exim</div>
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ borderTop: '1px solid #475569', paddingTop: 4, marginTop: 40, fontSize: 11, color: '#475569', minWidth: 160 }}>Authorized Signatory</div>
+        </div>
       </div>
     </div>
   );
