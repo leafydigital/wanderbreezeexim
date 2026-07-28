@@ -22,8 +22,22 @@ export interface Customer {
   email: string;
   address: string;
   type: CustomerType;
+  gstin: string;
+  tax_id: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface BankAccount {
+  id?: string;
+  bank_name: string;
+  branch: string;
+  account_name: string;
+  account_number: string;
+  ifsc_code: string;
+  swift_code: string;
+  qr_code_url?: string | null;
+  is_active: boolean;
 }
 
 export interface Supplier {
@@ -83,6 +97,7 @@ export interface InvoiceLineItem {
   unit: string;
   unit_price: number;
   total_price: number;
+  gst_percentage: number;
   sort_order: number;
 }
 
@@ -118,6 +133,34 @@ export interface Expense {
   amount: number;
   created_at: string;
   updated_at: string;
+}
+
+export interface QuotationItem {
+  product_name: string;
+  price_per_kg: number;
+  quantity_kg: number;
+  total: number;
+}
+
+export interface Quotation {
+  id: string;
+  quote_number: string;
+  customer_id: string | null;
+  customer_name: string;
+  company_name: string;
+  phone: string;
+  email: string;
+  address: string;
+  items: QuotationItem[];
+  total_amount: number;
+  validity_days: number;
+  valid_until: string | null;
+  validity_time_of_day: string;
+  notes: string;
+  payment_terms: string;
+  gst_percentage: number;
+  issue_date: string;
+  created_at: string;
 }
 
 export interface PricingCalculation {

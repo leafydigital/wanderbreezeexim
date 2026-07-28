@@ -13,8 +13,10 @@ import Customers from './pages/Customers';
 import Suppliers from './pages/Suppliers';
 import ProformaInvoices from './pages/ProformaInvoices';
 import Invoices from './pages/Invoices';
+import Quotations from './pages/Quotations';
 import Expenses from './pages/Expenses';
 import PricingCalculator from './pages/PricingCalculator';
+import FreshPricingCalculator from './pages/FreshPricingCalculator';
 import Documents from './pages/Documents';
 import Products from './pages/Products';
 import Users from './pages/Users';
@@ -43,8 +45,8 @@ function CRMInner() {
   if (!user) return <Login />;
 
   const firstAccessible = (
-    ['dashboard','customers','suppliers','products','proforma','invoices',
-     'expenses','pricing','documents','leadradar','outreachtracker','users','roles','companysettings'] as Page[]
+    ['dashboard','customers','suppliers','products','proforma','invoices','quotations',
+     'expenses','pricing','freshpricing','documents','leadradar','outreachtracker','users','roles','companysettings'] as Page[]
   ).find(p => can(p));
 
   const effectivePage = can(activePage) ? activePage : (firstAccessible ?? 'dashboard');
@@ -57,8 +59,10 @@ function CRMInner() {
         <div className={effectivePage === 'suppliers'       ? '' : 'hidden'}><Suppliers /></div>
         <div className={effectivePage === 'proforma'        ? '' : 'hidden'}><ProformaInvoices /></div>
         <div className={effectivePage === 'invoices'        ? '' : 'hidden'}><Invoices /></div>
+        <div className={effectivePage === 'quotations'      ? '' : 'hidden'}><Quotations onNavigate={(p) => setActivePage(p as Page)} /></div>
         <div className={effectivePage === 'expenses'        ? '' : 'hidden'}><Expenses /></div>
         <div className={effectivePage === 'pricing'         ? '' : 'hidden'}><PricingCalculator /></div>
+        <div className={effectivePage === 'freshpricing'    ? '' : 'hidden'}><FreshPricingCalculator /></div>
         <div className={effectivePage === 'documents'       ? '' : 'hidden'}><Documents /></div>
         <div className={effectivePage === 'products'        ? '' : 'hidden'}><Products /></div>
         <div className={effectivePage === 'users'           ? '' : 'hidden'}><Users /></div>

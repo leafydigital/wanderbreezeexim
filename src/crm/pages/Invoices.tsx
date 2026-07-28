@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import {
   supabase, Invoice, Customer, ProformaInvoice,
-  Currency, Incoterms, InvoiceStatus,
+  Currency, Incoterms, InvoiceStatus, BankAccount,
 } from '../lib/supabase';
 import Modal from '../components/Modal';
 import StatusBadge from '../components/StatusBadge';
@@ -27,11 +27,30 @@ interface LineItemForm {
   quantity: string;
   unit: string;
   unit_price: string;
+  gst_percentage: string;
 }
 
-const emptyLine = (): LineItemForm => ({
-  product_name: '', hs_code: '', description: '', quantity: '', unit: 'KG', unit_price: '',
+const emptyLine = (defaultGst: string = '0'): LineItemForm => ({
+  product_name: '', hs_code: '', description: '', quantity: '', unit: 'KG', unit_price: '', gst_percentage: defaultGst,
 });
+
+const GST_RATES = [
+  ['0', '0% — Exempt / Export'],
+  ['0.1', '0.1% — Merchant Exporter'],
+  ['5', '5% — Branded / Packaged'],
+  ['18', '18% — Blended / Mixed'],
+];
+
+interface CompanyProfile {
+  company_name?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  pincode?: string;
+  phone?: string;
+  email?: string;
+  gstin?: string;
+}
 
 // ─── Form defaults ────────────────────────────────────────────────────────────
 
@@ -49,6 +68,7 @@ const emptyForm = {
   port_of_discharge: '',
   payment_terms:     '',
   notes:             '',
+  bank_account_id:   '',
   // invoice status (existing)
   status:            'Draft' as InvoiceStatus,
   // new bill-tracking fields
@@ -80,6 +100,8 @@ export default function Invoices() {
   const [invoices, setInvoices]           = useState<Invoice[]>([]);
   const [customers, setCustomers]         = useState<Customer[]>([]);
   const [pis, setPIs]                     = useState<ProformaInvoice[]>([]);
+  const [banks, setBanks]                 = useState<BankAccount[]>([]);
+  const [company, setCompany]             = useState<CompanyProfile | null>(null);
   const [loading, setLoading]             = useState(true);
   const [search, setSearch]               = useState('');
   const [filterStatus, setFilterStatus]   = useState('all');
@@ -102,27 +124,37 @@ export default function Invoices() {
 
   useEffect(() => {
     fetchData();
+    fetchCompany();
     const onVis = () => { if (document.visibilityState === 'visible') fetchData(); };
     document.addEventListener('visibilitychange', onVis);
     return () => document.removeEventListener('visibilitychange', onVis);
   }, []);
 
+  async function fetchCompany() {
+    const { data } = await supabase.from('company_settings').select('*').limit(1).maybeSingle();
+    setCompany((data as CompanyProfile) ?? null);
+  }
+
   async function fetchData() {
     setLoading(true);
-    const [invRes, custRes, piRes] = await Promise.all([
+    const [invRes, custRes, piRes, bankRes] = await Promise.all([
       supabase.from('invoices')
         .select('*, customers(*), invoice_line_items(*)')
         .order('created_at', { ascending: false }),
       supabase.from('customers')
-        .select('id, customer_name, company_name, country, type, address, email, phone')
+        .select('id, customer_name, company_name, country, type, address, email, phone, gstin, tax_id')
         .order('customer_name'),
       supabase.from('proforma_invoices')
         .select('id, pi_number, customer_id')
         .order('created_at', { ascending: false }),
+      supabase.from('bank_accounts')
+        .select('*')
+        .order('is_active', { ascending: false }),
     ]);
     setInvoices((invRes.data as Invoice[]) ?? []);
     setCustomers((custRes.data as Customer[]) ?? []);
     setPIs((piRes.data as ProformaInvoice[]) ?? []);
+    setBanks((bankRes.data as BankAccount[]) ?? []);
     setLoading(false);
   }
 
@@ -137,7 +169,18 @@ export default function Invoices() {
   const filteredPIs      = pis.filter(p => !form.customer_id || p.customer_id === form.customer_id);
   const subtotal         = lineItems.reduce((s, l) =>
     s + (parseFloat(l.quantity) || 0) * (parseFloat(l.unit_price) || 0), 0);
-  const balance          = subtotal - (parseFloat(form.advance_amount) || 0);
+  const gstBreakdown = Object.entries(
+    lineItems.reduce((acc: Record<string, number>, l) => {
+      const rate = parseFloat(l.gst_percentage) || 0;
+      if (rate <= 0) return acc;
+      const lineAmt = (parseFloat(l.quantity) || 0) * (parseFloat(l.unit_price) || 0);
+      acc[rate] = (acc[rate] ?? 0) + lineAmt * (rate / 100);
+      return acc;
+    }, {})
+  ).map(([rate, amount]) => ({ rate: parseFloat(rate), amount }));
+  const gstTotal          = gstBreakdown.reduce((s, g) => s + g.amount, 0);
+  const grandTotal        = subtotal + gstTotal;
+  const balance          = grandTotal - (parseFloat(form.advance_amount) || 0);
 
   const isBillRecord = (inv: Invoice) =>
     inv.currency === 'INR' || (inv.customers as Customer | undefined)?.type === 'Domestic';
@@ -164,8 +207,9 @@ export default function Invoices() {
       due_date:       form.due_date     || null,
       delivery_date:  form.delivery_date || null,
       advance_amount: parseFloat(form.advance_amount) || 0,
+      bank_account_id: form.bank_account_id || null,
       subtotal,
-      total: subtotal,
+      total: grandTotal,
       updated_at: new Date().toISOString(),
     };
     // Remove bill-specific fields for export invoices to keep clean
@@ -197,6 +241,7 @@ export default function Invoices() {
           unit:         l.unit,
           unit_price:   parseFloat(l.unit_price) || 0,
           total_price:  (parseFloat(l.quantity) || 0) * (parseFloat(l.unit_price) || 0),
+          gst_percentage: parseFloat(l.gst_percentage) || 0,
           sort_order:   i,
         }));
       if (items.length > 0) await supabase.from('invoice_line_items').insert(items);
@@ -236,6 +281,7 @@ export default function Invoices() {
       port_of_discharge: inv.port_of_discharge,
       payment_terms:     inv.payment_terms,
       notes:             inv.notes,
+      bank_account_id:   r.bank_account_id ?? '',
       status:            inv.status,
       order_status:      r.order_status   ?? 'Order Placed',
       payment_status:    r.payment_status ?? 'Pending',
@@ -249,6 +295,7 @@ export default function Invoices() {
       quantity:     String(l.quantity),
       unit:         l.unit,
       unit_price:   String(l.unit_price),
+      gst_percentage: String((l as any).gst_percentage ?? 0),
     })));
     setEditId(inv.id);
     setErrors({});
@@ -260,15 +307,52 @@ export default function Invoices() {
     const prefix = mode === 'invoice' ? 'WBE-INV' : 'WBE-BILL';
     const { count } = await supabase.from('invoices').select('id', { count: 'exact', head: true });
     const year = new Date().getFullYear();
+    const activeBank = banks.find(b => b.is_active);
     setForm({
       ...emptyForm,
       invoice_number: `${prefix}-${year}-${String((count ?? 0) + 1).padStart(4, '0')}`,
+      bank_account_id: activeBank?.id ?? '',
     });
-    setLineItems([emptyLine()]);
+    setLineItems([emptyLine(mode === 'bill' ? '5' : '0')]);
     setEditId(null);
     setErrors({});
     setModalOpen(true);
   }
+
+  async function openCreateFromQuotation(payload: { customer_id: string | null; payment_terms: string; notes: string; lineItems: LineItemForm[] }) {
+    setModalMode('bill');
+    const { count } = await supabase.from('invoices').select('id', { count: 'exact', head: true });
+    const year = new Date().getFullYear();
+    const activeBank = banks.find(b => b.is_active);
+    setForm({
+      ...emptyForm,
+      invoice_number: `WBE-BILL-${year}-${String((count ?? 0) + 1).padStart(4, '0')}`,
+      bank_account_id: activeBank?.id ?? '',
+      customer_id: payload.customer_id ?? '',
+      payment_terms: payload.payment_terms,
+      notes: payload.notes,
+    });
+    setLineItems(payload.lineItems.length > 0 ? payload.lineItems : [emptyLine('5')]);
+    setEditId(null);
+    setErrors({});
+    setModalOpen(true);
+  }
+
+  // ── Pick up a "Convert to Bill" handoff from the Quotations page ──────────
+  const conversionHandled = useRef(false);
+  useEffect(() => {
+    if (conversionHandled.current || loading) return;
+    const raw = sessionStorage.getItem('wbe_convert_quote_to_bill');
+    if (!raw) return;
+    conversionHandled.current = true;
+    sessionStorage.removeItem('wbe_convert_quote_to_bill');
+    try {
+      const payload = JSON.parse(raw);
+      openCreateFromQuotation(payload);
+    } catch {
+      // malformed handoff data — ignore, user can still create a bill manually
+    }
+  }, [loading]);
 
   function handlePrint() {
     const content = printRef.current?.innerHTML;
@@ -622,11 +706,44 @@ export default function Invoices() {
             )}
           </div>
 
+          {/* ── Bank account for this document ──────────────────────────────── */}
+          {banks.length > 0 && (
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-2">
+                Bank Account {modalMode === 'bill' ? '& QR' : ''} to show on this {modalMode === 'bill' ? 'bill' : 'invoice'}
+              </label>
+              <div className="space-y-2">
+                {banks.map(b => (
+                  <label
+                    key={b.id}
+                    className={`flex items-center gap-3 border rounded-lg px-3 py-2 cursor-pointer transition-colors ${
+                      form.bank_account_id === b.id ? 'border-teal-400 bg-teal-50' : 'border-gray-200 hover:bg-gray-50'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="bank_account_id"
+                      checked={form.bank_account_id === b.id}
+                      onChange={() => setForm(f => ({ ...f, bank_account_id: b.id! }))}
+                      className="text-teal-600 focus:ring-teal-500"
+                    />
+                    {b.qr_code_url && <img src={b.qr_code_url} alt="QR" className="w-8 h-8 object-contain border border-gray-200 rounded bg-white flex-shrink-0" />}
+                    <div className="flex-1 min-w-0">
+                      <span className="text-sm font-medium text-gray-800">{b.bank_name}</span>
+                      <span className="text-xs text-gray-400 ml-2">A/C {b.account_number}</span>
+                      {b.is_active && <span className="text-xs bg-teal-600 text-white px-1.5 py-0.5 rounded-full ml-2">Active</span>}
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* ── Line items ──────────────────────────────────────────────────── */}
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="text-xs font-semibold text-gray-700 uppercase tracking-wide">Products / Items</label>
-              <button onClick={() => setLineItems(l => [...l, emptyLine()])} className="text-xs text-teal-600 font-medium hover:text-teal-700 flex items-center gap-1">
+              <button onClick={() => setLineItems(l => [...l, emptyLine(modalMode === 'bill' ? '5' : '0')])} className="text-xs text-teal-600 font-medium hover:text-teal-700 flex items-center gap-1">
                 <Plus size={13} /> Add Row
               </button>
             </div>
@@ -638,6 +755,7 @@ export default function Invoices() {
                     <th className="text-left px-3 py-2 text-xs text-gray-500 font-medium w-20">Qty</th>
                     <th className="text-left px-3 py-2 text-xs text-gray-500 font-medium w-20">Unit</th>
                     <th className="text-left px-3 py-2 text-xs text-gray-500 font-medium w-32">Price ({currencySymbol})</th>
+                    <th className="text-left px-3 py-2 text-xs text-gray-500 font-medium w-32">GST %</th>
                     <th className="text-right px-3 py-2 text-xs text-gray-500 font-medium w-28">Total</th>
                     <th className="w-8"></th>
                   </tr>
@@ -666,6 +784,11 @@ export default function Invoices() {
                       <td className="px-3 py-2">
                         <input type="number" value={l.unit_price} onChange={e => setLineItems(items => items.map((x, j) => j === i ? { ...x, unit_price: e.target.value } : x))} className="w-full border border-gray-200 rounded px-2 py-1.5 text-sm focus:outline-none" />
                       </td>
+                      <td className="px-3 py-2">
+                        <select value={l.gst_percentage} onChange={e => setLineItems(items => items.map((x, j) => j === i ? { ...x, gst_percentage: e.target.value } : x))} className="w-full border border-gray-200 rounded px-2 py-1.5 text-sm">
+                          {GST_RATES.map(([v, label]) => <option key={v} value={v}>{label}</option>)}
+                        </select>
+                      </td>
                       <td className="px-3 py-2 text-right text-sm font-medium text-gray-700">
                         {formatCurrency((parseFloat(l.quantity) || 0) * (parseFloat(l.unit_price) || 0), currencySymbol)}
                       </td>
@@ -677,20 +800,34 @@ export default function Invoices() {
                 </tbody>
                 <tfoot>
                   <tr className="border-t-2 border-gray-200 bg-gray-50">
-                    <td colSpan={4} className="px-3 py-2 text-sm font-semibold text-gray-700 text-right">Total</td>
+                    <td colSpan={5} className="px-3 py-2 text-sm font-semibold text-gray-700 text-right">Subtotal</td>
                     <td className="px-3 py-2 text-right text-sm font-bold text-gray-900">{formatCurrency(subtotal, currencySymbol)}</td>
                     <td></td>
                   </tr>
+                  {gstBreakdown.map(g => (
+                    <tr key={g.rate} className="bg-gray-50">
+                      <td colSpan={5} className="px-3 py-1 text-xs text-gray-500 text-right">GST @ {g.rate}%</td>
+                      <td className="px-3 py-1 text-right text-xs text-gray-600">{formatCurrency(g.amount, currencySymbol)}</td>
+                      <td></td>
+                    </tr>
+                  ))}
+                  {gstTotal > 0 && (
+                    <tr className="border-t border-gray-200 bg-gray-50">
+                      <td colSpan={5} className="px-3 py-2 text-sm font-bold text-gray-900 text-right">Grand Total</td>
+                      <td className="px-3 py-2 text-right text-sm font-bold text-gray-900">{formatCurrency(grandTotal, currencySymbol)}</td>
+                      <td></td>
+                    </tr>
+                  )}
                   {/* Advance / balance summary — bill only */}
                   {modalMode === 'bill' && parseFloat(form.advance_amount) > 0 && (
                     <>
                       <tr className="bg-amber-50">
-                        <td colSpan={4} className="px-3 py-1.5 text-xs text-amber-700 text-right">Advance Paid</td>
+                        <td colSpan={5} className="px-3 py-1.5 text-xs text-amber-700 text-right">Advance Paid</td>
                         <td className="px-3 py-1.5 text-right text-xs font-semibold text-amber-700">− {formatCurrency(parseFloat(form.advance_amount), 'INR')}</td>
                         <td></td>
                       </tr>
                       <tr className="bg-amber-50 border-t border-amber-200">
-                        <td colSpan={4} className="px-3 py-1.5 text-sm font-bold text-amber-800 text-right">Balance Due</td>
+                        <td colSpan={5} className="px-3 py-1.5 text-sm font-bold text-amber-800 text-right">Balance Due</td>
                         <td className="px-3 py-1.5 text-right text-sm font-bold text-amber-800">{formatCurrency(balance, 'INR')}</td>
                         <td></td>
                       </tr>
@@ -727,7 +864,7 @@ export default function Invoices() {
               <Download size={15} /> Print / Download PDF
             </button>
           </div>
-          <div ref={printRef}><InvoicePreview inv={previewInv} /></div>
+          <div ref={printRef}><InvoicePreview inv={previewInv} banks={banks} company={company} /></div>
         </Modal>
       )}
 
@@ -745,7 +882,7 @@ export default function Invoices() {
 
 // ─── Print Preview ────────────────────────────────────────────────────────────
 
-function InvoicePreview({ inv }: { inv: Invoice }) {
+function InvoicePreview({ inv, banks, company }: { inv: Invoice; banks: BankAccount[]; company: CompanyProfile | null }) {
   const r        = inv as any;
   const customer = inv.customers as Customer | undefined;
   const items    = inv.invoice_line_items ?? [];
@@ -754,6 +891,20 @@ function InvoicePreview({ inv }: { inv: Invoice }) {
   const docLabel = isDomestic ? 'BILL' : 'INVOICE';
   const advance  = r.advance_amount ?? 0;
   const balance  = inv.total - advance;
+  const bank: BankAccount | undefined = banks.find(b => b.id === r.bank_account_id) ?? banks.find(b => b.is_active);
+  const printedSubtotal = items.reduce((s, item) => s + Number(item.total_price), 0);
+  const printedGstBreakdown = Object.entries(
+    items.reduce((acc: Record<string, number>, item: any) => {
+      const rate = Number(item.gst_percentage) || 0;
+      if (rate <= 0) return acc;
+      acc[rate] = (acc[rate] ?? 0) + Number(item.total_price) * (rate / 100);
+      return acc;
+    }, {})
+  ).map(([rate, amount]) => ({ rate: parseFloat(rate), amount: amount as number }));
+  const printedGstTotal = printedGstBreakdown.reduce((s, g) => s + g.amount, 0);
+  const companyName = company?.company_name || 'Wander Breeze Exim';
+  const companyAddressParts = [company?.address, company?.city, company?.state, company?.pincode].filter(Boolean);
+  const companyContactParts = [company?.phone, company?.email].filter(Boolean);
 
   return (
     <div style={{ fontFamily: 'Arial, sans-serif', fontSize: 13, color: '#1a1a1a' }}>
@@ -761,8 +912,10 @@ function InvoicePreview({ inv }: { inv: Invoice }) {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
-          <div style={{ fontSize: 22, fontWeight: 700, color: '#0f766e' }}>WANDER BREEZE EXIM</div>
-          <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>{isDomestic ? 'Domestic Trade' : 'Export CRM'}</div>
+          <div style={{ fontSize: 22, fontWeight: 700, color: '#0f766e' }}>{companyName.toUpperCase()}</div>
+          {companyAddressParts.length > 0 && <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>{companyAddressParts.join(', ')}</div>}
+          {companyContactParts.length > 0 && <div style={{ fontSize: 12, color: '#64748b' }}>{companyContactParts.join(' · ')}</div>}
+          {company?.gstin && <div style={{ fontSize: 12, color: '#64748b' }}>GSTIN: {company.gstin}</div>}
         </div>
         <div style={{ textAlign: 'right' }}>
           <div style={{ fontSize: 18, fontWeight: 700 }}>{docLabel}</div>
@@ -791,6 +944,8 @@ function InvoicePreview({ inv }: { inv: Invoice }) {
               {customer.country && !isDomestic && <div style={{ color: '#475569', fontSize: 12 }}>{customer.country}</div>}
               {customer.phone && <div style={{ color: '#475569', fontSize: 12 }}>{customer.phone}</div>}
               {customer.email && <div style={{ color: '#475569', fontSize: 12 }}>{customer.email}</div>}
+              {isDomestic && customer.gstin && <div style={{ color: '#475569', fontSize: 12 }}>GSTIN: {customer.gstin}</div>}
+              {!isDomestic && customer.tax_id && <div style={{ color: '#475569', fontSize: 12 }}>Tax ID: {customer.tax_id}</div>}
             </>
           )}
         </div>
@@ -824,6 +979,7 @@ function InvoicePreview({ inv }: { inv: Invoice }) {
             <th style={{ padding: '8px 12px', textAlign: 'right', fontSize: 11, color: '#475569', fontWeight: 700, textTransform: 'uppercase' }}>Qty</th>
             <th style={{ padding: '8px 12px', textAlign: 'left',  fontSize: 11, color: '#475569', fontWeight: 700, textTransform: 'uppercase' }}>Unit</th>
             <th style={{ padding: '8px 12px', textAlign: 'right', fontSize: 11, color: '#475569', fontWeight: 700, textTransform: 'uppercase' }}>Rate</th>
+            <th style={{ padding: '8px 12px', textAlign: 'right', fontSize: 11, color: '#475569', fontWeight: 700, textTransform: 'uppercase' }}>GST</th>
             <th style={{ padding: '8px 12px', textAlign: 'right', fontSize: 11, color: '#475569', fontWeight: 700, textTransform: 'uppercase' }}>Amount</th>
           </tr>
         </thead>
@@ -837,23 +993,40 @@ function InvoicePreview({ inv }: { inv: Invoice }) {
               <td style={{ padding: '8px 12px', textAlign: 'right' }}>{item.quantity}</td>
               <td style={{ padding: '8px 12px' }}>{item.unit}</td>
               <td style={{ padding: '8px 12px', textAlign: 'right' }}>{formatCurrency(item.unit_price, cur)}</td>
+              <td style={{ padding: '8px 12px', textAlign: 'right', color: '#64748b' }}>{Number((item as any).gst_percentage) > 0 ? `${(item as any).gst_percentage}%` : '—'}</td>
               <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 600 }}>{formatCurrency(item.total_price, cur)}</td>
             </tr>
           ))}
         </tbody>
         <tfoot>
           <tr style={{ background: '#f8fafc', borderTop: '2px solid #e2e8f0' }}>
-            <td colSpan={4} style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 700 }}>TOTAL</td>
-            <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 700, fontSize: 15 }}>{formatCurrency(inv.total, cur)}</td>
+            <td colSpan={5} style={{ padding: '8px 12px', textAlign: 'right', fontWeight: printedGstTotal > 0 ? 400 : 700, color: printedGstTotal > 0 ? '#64748b' : undefined }}>
+              {printedGstTotal > 0 ? 'Subtotal' : 'TOTAL'}
+            </td>
+            <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: printedGstTotal > 0 ? 400 : 700, fontSize: printedGstTotal > 0 ? 13 : 15, color: printedGstTotal > 0 ? '#64748b' : undefined }}>
+              {formatCurrency(printedSubtotal, cur)}
+            </td>
           </tr>
+          {printedGstBreakdown.map(g => (
+            <tr key={g.rate} style={{ background: '#f8fafc' }}>
+              <td colSpan={5} style={{ padding: '4px 12px', textAlign: 'right', color: '#64748b', fontSize: 12 }}>GST @ {g.rate}%</td>
+              <td style={{ padding: '4px 12px', textAlign: 'right', color: '#64748b', fontSize: 12 }}>{formatCurrency(g.amount, cur)}</td>
+            </tr>
+          ))}
+          {printedGstTotal > 0 && (
+            <tr style={{ background: '#f8fafc', borderTop: '1px solid #e2e8f0' }}>
+              <td colSpan={5} style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 700 }}>GRAND TOTAL</td>
+              <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 700, fontSize: 15 }}>{formatCurrency(inv.total, cur)}</td>
+            </tr>
+          )}
           {isDomestic && advance > 0 && (
             <>
               <tr style={{ background: '#fffbeb' }}>
-                <td colSpan={4} style={{ padding: '6px 12px', textAlign: 'right', color: '#92400e', fontSize: 12 }}>Advance Received ({r.payment_method || 'Paid'})</td>
+                <td colSpan={5} style={{ padding: '6px 12px', textAlign: 'right', color: '#92400e', fontSize: 12 }}>Advance Received ({r.payment_method || 'Paid'})</td>
                 <td style={{ padding: '6px 12px', textAlign: 'right', color: '#92400e', fontSize: 12, fontWeight: 600 }}>− {formatCurrency(advance, 'INR')}</td>
               </tr>
               <tr style={{ background: '#fffbeb', borderTop: '1px solid #fde68a' }}>
-                <td colSpan={4} style={{ padding: '6px 12px', textAlign: 'right', fontWeight: 700, color: '#92400e' }}>BALANCE DUE</td>
+                <td colSpan={5} style={{ padding: '6px 12px', textAlign: 'right', fontWeight: 700, color: '#92400e' }}>BALANCE DUE</td>
                 <td style={{ padding: '6px 12px', textAlign: 'right', fontWeight: 700, fontSize: 14, color: '#92400e' }}>{formatCurrency(balance, 'INR')}</td>
               </tr>
             </>
@@ -869,8 +1042,30 @@ function InvoicePreview({ inv }: { inv: Invoice }) {
         </div>
       )}
 
+      {/* Payment Details */}
+      {bank && (
+        <div style={{ display: 'flex', gap: 16, alignItems: 'center', background: '#f8fafc', padding: '12px 16px', borderRadius: 8, marginBottom: 12 }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', marginBottom: 6 }}>Payment Details</div>
+            <div style={{ fontSize: 12, color: '#334155' }}>
+              <div><strong>{bank.bank_name}</strong>{bank.branch ? ` — ${bank.branch}` : ''}</div>
+              <div>A/C Name: {bank.account_name}</div>
+              <div>A/C Number: {bank.account_number}</div>
+              {bank.ifsc_code && <div>IFSC: {bank.ifsc_code}</div>}
+              {!isDomestic && bank.swift_code && <div>SWIFT: {bank.swift_code}</div>}
+            </div>
+          </div>
+          {bank.qr_code_url && (
+            <div style={{ textAlign: 'center', flexShrink: 0 }}>
+              <img src={bank.qr_code_url} alt="Payment QR" style={{ width: 90, height: 90, objectFit: 'contain', background: '#fff', border: '1px solid #e2e8f0', borderRadius: 6 }} />
+              <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 4 }}>Scan to Pay</div>
+            </div>
+          )}
+        </div>
+      )}
+
       <div style={{ marginTop: 16, textAlign: 'center', color: '#94a3b8', fontSize: 11, borderTop: '1px solid #e2e8f0', paddingTop: 12 }}>
-        Wander Breeze Exim | Computer Generated {isDomestic ? 'Bill' : 'Invoice'}
+        {companyName} | Computer Generated {isDomestic ? 'Bill' : 'Invoice'}
       </div>
     </div>
   );

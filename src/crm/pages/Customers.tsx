@@ -13,6 +13,8 @@ const emptyForm = {
   email: '',
   address: '',
   type: 'International' as CustomerType,
+  gstin: '',
+  tax_id: '',
 };
 
 export default function Customers() {
@@ -80,6 +82,8 @@ export default function Customers() {
       email: c.email,
       address: c.address,
       type: c.type,
+      gstin: c.gstin ?? '',
+      tax_id: c.tax_id ?? '',
     });
     setEditId(c.id);
     setErrors({});
@@ -175,6 +179,8 @@ export default function Customers() {
                         <div>
                           <p className="text-sm font-semibold text-gray-900">{c.customer_name}</p>
                           {c.company_name && <p className="text-xs text-gray-500">{c.company_name}</p>}
+                          {c.type === 'Domestic' && c.gstin && <p className="text-xs text-gray-400">GSTIN: {c.gstin}</p>}
+                          {c.type === 'International' && c.tax_id && <p className="text-xs text-gray-400">Tax ID: {c.tax_id}</p>}
                         </div>
                       </div>
                     </td>
@@ -254,6 +260,30 @@ export default function Customers() {
                 <option>International</option>
               </select>
             </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            {form.type === 'Domestic' ? (
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">GSTIN</label>
+                <input
+                  value={form.gstin}
+                  onChange={e => setForm(f => ({ ...f, gstin: e.target.value.toUpperCase() }))}
+                  placeholder="e.g. 32ABCDE1234F1Z5"
+                  maxLength={15}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 uppercase"
+                />
+              </div>
+            ) : (
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Tax ID / VAT Number</label>
+                <input
+                  value={form.tax_id}
+                  onChange={e => setForm(f => ({ ...f, tax_id: e.target.value }))}
+                  placeholder="If applicable in buyer's country"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                />
+              </div>
+            )}
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>

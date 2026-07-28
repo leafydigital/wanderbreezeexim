@@ -4,7 +4,7 @@ import {
   DollarSign, Calculator, FolderOpen, Menu, X,
   ChevronRight, Package, Shield, UserCog, LogOut, ChevronDown,
   type LucideIcon,
-  Radar, Network, AlertTriangle, Search, Building2,
+  Radar, Network, AlertTriangle, Search, Building2, Leaf, ClipboardList,
 } from 'lucide-react';
 import { useAuth } from '../lib/auth';
 import { useGuardedSignOut } from './InactivityWarning';
@@ -15,8 +15,10 @@ export type Page =
   | 'suppliers'
   | 'proforma'
   | 'invoices'
+  | 'quotations'
   | 'expenses'
   | 'pricing'
+  | 'freshpricing'
   | 'documents'
   | 'products'
   | 'users'
@@ -47,8 +49,10 @@ const navItems: NavItem[] = [
   { id: 'products', label: 'Products', icon: Package, module: 'products' },
   { id: 'proforma', label: 'Proforma Invoices', icon: FileText, module: 'proforma' },
   { id: 'invoices', label: 'Invoices', icon: Receipt, module: 'invoices' },
+  { id: 'quotations', label: 'Quotations', icon: ClipboardList, module: 'quotations' },
   { id: 'expenses', label: 'Expenses', icon: DollarSign, module: 'expenses' },
   { id: 'pricing', label: 'FOB / CIF Pricing', icon: Calculator, module: 'pricing' },
+  { id: 'freshpricing', label: 'WBE Fresh Pricing', icon: Leaf, module: 'freshpricing' },
   { id: 'documents', label: 'Documents', icon: FolderOpen, module: 'documents' },
   { id: 'users', label: 'User Management', icon: UserCog, module: 'users' },
   { id: 'roles', label: 'Role Management', icon: Shield, module: 'roles' },

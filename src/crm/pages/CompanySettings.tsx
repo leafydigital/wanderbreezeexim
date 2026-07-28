@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
-import { Building2, Plus, Trash2, Upload, Eye, Download, CheckCircle, X, AlertCircle } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import { Building2, Plus, Trash2, Upload, Eye, Download, CheckCircle, X, AlertCircle, QrCode } from 'lucide-react';
+import { supabase, BankAccount } from '../lib/supabase';
 
 interface CompanyProfile {
   id?: string;
@@ -18,17 +18,6 @@ interface CompanyProfile {
   fssai: string;
   spices_board_rcmc: string;
   other_certifications: string;
-}
-
-interface BankAccount {
-  id?: string;
-  bank_name: string;
-  branch: string;
-  account_name: string;
-  account_number: string;
-  ifsc_code: string;
-  swift_code: string;
-  is_active: boolean;
 }
 
 interface Certificate {
@@ -76,6 +65,12 @@ export default function CompanySettings() {
   const [certName, setCertName] = useState('');
   const [certNamePrompt, setCertNamePrompt] = useState(false);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [newBankQrFile, setNewBankQrFile] = useState<File | null>(null);
+  const [newBankQrPreview, setNewBankQrPreview] = useState<string | null>(null);
+  const [qrUploadingFor, setQrUploadingFor] = useState<string | null>(null);
+  const newBankQrInputRef = useRef<HTMLInputElement>(null);
+  const existingBankQrInputRef = useRef<HTMLInputElement>(null);
+  const [qrTargetBankId, setQrTargetBankId] = useState<string | null>(null);
 
   useEffect(() => { fetchAll(); }, []);
 
@@ -127,21 +122,73 @@ export default function CompanySettings() {
     }
   }
 
+  async function uploadQrFile(file: File): Promise<string> {
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const path = `bank-qr/${Date.now()}_${safeName}`;
+    const { error: upError } = await supabase.storage.from('documents').upload(path, file, { upsert: false });
+    if (upError) throw new Error(`QR upload failed: ${upError.message}`);
+    const { data: urlData } = supabase.storage.from('documents').getPublicUrl(path);
+    return urlData.publicUrl;
+  }
+
+  function handleNewBankQrSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setNewBankQrFile(file);
+    setNewBankQrPreview(URL.createObjectURL(file));
+    e.target.value = '';
+  }
+
   async function saveBank() {
     setSavingBank('new');
     setSaveError(null);
-    if (newBank.is_active) {
-      await supabase.from('bank_accounts').update({ is_active: false }).neq('id', '00000000-0000-0000-0000-000000000000');
-    }
-    const { error } = await supabase.from('bank_accounts').insert(newBank);
-    if (error) {
-      setSaveError(`Bank save failed: ${error.message}`);
-    } else {
+    try {
+      let qr_code_url: string | null = null;
+      if (newBankQrFile) {
+        qr_code_url = await uploadQrFile(newBankQrFile);
+      }
+      if (newBank.is_active) {
+        await supabase.from('bank_accounts').update({ is_active: false }).neq('id', '00000000-0000-0000-0000-000000000000');
+      }
+      const { error } = await supabase.from('bank_accounts').insert({ ...newBank, qr_code_url });
+      if (error) throw new Error(`Bank save failed: ${error.message}`);
       setNewBank(emptyBank());
+      setNewBankQrFile(null);
+      setNewBankQrPreview(null);
       setAddingBank(false);
       fetchAll();
+    } catch (e: any) {
+      setSaveError(e.message || 'Bank save failed');
     }
     setSavingBank(null);
+  }
+
+  function triggerExistingBankQrUpload(bankId: string) {
+    setQrTargetBankId(bankId);
+    existingBankQrInputRef.current?.click();
+  }
+
+  async function handleExistingBankQrSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file || !qrTargetBankId) return;
+    setQrUploadingFor(qrTargetBankId);
+    setSaveError(null);
+    try {
+      const qr_code_url = await uploadQrFile(file);
+      const { error } = await supabase.from('bank_accounts').update({ qr_code_url }).eq('id', qrTargetBankId);
+      if (error) throw new Error(`QR save failed: ${error.message}`);
+      fetchAll();
+    } catch (err: any) {
+      setSaveError(err.message || 'QR upload failed');
+    }
+    setQrUploadingFor(null);
+    setQrTargetBankId(null);
+  }
+
+  async function removeBankQr(bankId: string) {
+    await supabase.from('bank_accounts').update({ qr_code_url: null }).eq('id', bankId);
+    fetchAll();
   }
 
   async function deleteBank(id: string) {
@@ -307,6 +354,8 @@ export default function CompanySettings() {
           </button>
         </div>
 
+        <input ref={existingBankQrInputRef} type="file" accept="image/*" className="hidden" onChange={handleExistingBankQrSelect} />
+
         {banks.length === 0 && !addingBank && (
           <p className="text-sm text-gray-400 text-center py-6">No bank accounts added yet.</p>
         )}
@@ -328,13 +377,32 @@ export default function CompanySettings() {
                     <span className="col-span-2">Name: {bank.account_name}</span>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  {!bank.is_active && (
-                    <button onClick={() => setActiveBank(bank.id!)} disabled={savingBank === bank.id} className="text-xs text-teal-600 border border-teal-300 px-2 py-1 rounded hover:bg-teal-50">
-                      {savingBank === bank.id ? '...' : 'Set Active'}
+
+                {bank.qr_code_url && (
+                  <img src={bank.qr_code_url} alt="Payment QR" className="w-16 h-16 object-contain border border-gray-200 rounded bg-white flex-shrink-0" />
+                )}
+
+                <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                  <div className="flex items-center gap-2">
+                    {!bank.is_active && (
+                      <button onClick={() => setActiveBank(bank.id!)} disabled={savingBank === bank.id} className="text-xs text-teal-600 border border-teal-300 px-2 py-1 rounded hover:bg-teal-50">
+                        {savingBank === bank.id ? '...' : 'Set Active'}
+                      </button>
+                    )}
+                    <button onClick={() => deleteBank(bank.id!)} className="p-1.5 text-gray-300 hover:text-red-500 transition-colors"><Trash2 size={14} /></button>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => triggerExistingBankQrUpload(bank.id!)}
+                      disabled={qrUploadingFor === bank.id}
+                      className="flex items-center gap-1 text-xs text-teal-600 hover:text-teal-700 disabled:opacity-50"
+                    >
+                      <QrCode size={12} /> {qrUploadingFor === bank.id ? 'Uploading...' : bank.qr_code_url ? 'Change QR' : 'Upload QR'}
                     </button>
-                  )}
-                  <button onClick={() => deleteBank(bank.id!)} className="p-1.5 text-gray-300 hover:text-red-500 transition-colors"><Trash2 size={14} /></button>
+                    {bank.qr_code_url && (
+                      <button onClick={() => removeBankQr(bank.id!)} className="text-xs text-gray-400 hover:text-red-500">Remove</button>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -351,13 +419,24 @@ export default function CompanySettings() {
               <div><label className={labelCls}>Account Number</label><input value={newBank.account_number} onChange={e => setNewBank(b => ({ ...b, account_number: e.target.value }))} className={inputCls} /></div>
               <div><label className={labelCls}>IFSC Code</label><input value={newBank.ifsc_code} onChange={e => setNewBank(b => ({ ...b, ifsc_code: e.target.value }))} className={inputCls} /></div>
               <div><label className={labelCls}>SWIFT Code</label><input value={newBank.swift_code} onChange={e => setNewBank(b => ({ ...b, swift_code: e.target.value }))} className={inputCls} /></div>
+              <div className="col-span-2">
+                <label className={labelCls}>Payment QR Code (optional)</label>
+                <div className="flex items-center gap-3">
+                  <button onClick={() => newBankQrInputRef.current?.click()} className="flex items-center gap-1.5 text-xs border border-gray-200 px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100">
+                    <QrCode size={13} /> {newBankQrFile ? 'Change Image' : 'Choose Image'}
+                  </button>
+                  <input ref={newBankQrInputRef} type="file" accept="image/*" className="hidden" onChange={handleNewBankQrSelect} />
+                  {newBankQrPreview && <img src={newBankQrPreview} alt="QR preview" className="w-12 h-12 object-contain border border-gray-200 rounded bg-white" />}
+                  {newBankQrFile && <span className="text-xs text-gray-400">{newBankQrFile.name}</span>}
+                </div>
+              </div>
               <div className="col-span-2 flex items-center gap-2">
                 <input type="checkbox" id="is_active" checked={newBank.is_active} onChange={e => setNewBank(b => ({ ...b, is_active: e.target.checked }))} className="rounded" />
-                <label htmlFor="is_active" className="text-sm text-gray-700">Set as active bank (will appear on invoices)</label>
+                <label htmlFor="is_active" className="text-sm text-gray-700">Set as active bank (default on invoices)</label>
               </div>
             </div>
             <div className="flex gap-2 justify-end">
-              <button onClick={() => { setAddingBank(false); setNewBank(emptyBank()); }} className="border border-gray-200 text-gray-600 px-4 py-1.5 rounded-lg text-sm hover:bg-gray-100">Cancel</button>
+              <button onClick={() => { setAddingBank(false); setNewBank(emptyBank()); setNewBankQrFile(null); setNewBankQrPreview(null); }} className="border border-gray-200 text-gray-600 px-4 py-1.5 rounded-lg text-sm hover:bg-gray-100">Cancel</button>
               <button onClick={saveBank} disabled={savingBank === 'new'} className="bg-teal-600 text-white px-4 py-1.5 rounded-lg text-sm hover:bg-teal-700 disabled:opacity-60">
                 {savingBank === 'new' ? 'Saving...' : 'Save Bank'}
               </button>
