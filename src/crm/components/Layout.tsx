@@ -4,7 +4,7 @@ import {
   DollarSign, Calculator, FolderOpen, Menu, X,
   ChevronRight, Package, Shield, UserCog, LogOut, ChevronDown,
   type LucideIcon,
-  Radar, Network, AlertTriangle, Search, Building2, Leaf, ClipboardList,
+  Radar, Network, AlertTriangle, Search, Building2, ClipboardList,
 } from 'lucide-react';
 import { useAuth } from '../lib/auth';
 import { useGuardedSignOut } from './InactivityWarning';
@@ -18,7 +18,6 @@ export type Page =
   | 'quotations'
   | 'expenses'
   | 'pricing'
-  | 'freshpricing'
   | 'documents'
   | 'products'
   | 'users'
@@ -52,7 +51,6 @@ const navItems: NavItem[] = [
   { id: 'quotations', label: 'Quotations', icon: ClipboardList, module: 'quotations' },
   { id: 'expenses', label: 'Expenses', icon: DollarSign, module: 'expenses' },
   { id: 'pricing', label: 'FOB / CIF Pricing', icon: Calculator, module: 'pricing' },
-  { id: 'freshpricing', label: 'WBE Fresh Pricing', icon: Leaf, module: 'freshpricing' },
   { id: 'documents', label: 'Documents', icon: FolderOpen, module: 'documents' },
   { id: 'users', label: 'User Management', icon: UserCog, module: 'users' },
   { id: 'roles', label: 'Role Management', icon: Shield, module: 'roles' },
@@ -150,7 +148,15 @@ export default function Layout({ activePage, onNavigate, children }: LayoutProps
         </nav>
 
         {/* User info */}
-        <div className="border-t border-slate-700 p-3 flex-shrink-0">
+        <div className="border-t border-slate-700 p-3 flex-shrink-0 space-y-2">
+          {role?.name === 'Admin' && (
+            <button
+              onClick={() => { sessionStorage.setItem('wbe_dashboard_mode', 'domestic'); window.location.href = '/wbe-fresh'; }}
+              className="w-full flex items-center justify-center gap-2 text-xs font-medium text-teal-300 bg-slate-800 hover:bg-slate-700 px-3 py-2 rounded-lg transition-colors"
+            >
+              Switch to Domestic Dashboard
+            </button>
+          )}
           <div className="flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-slate-800 transition-colors">
             <div className="w-7 h-7 bg-teal-500 rounded-full flex items-center justify-center flex-shrink-0">
               <span className="text-white text-xs font-bold">{(user?.name || 'U')[0].toUpperCase()}</span>

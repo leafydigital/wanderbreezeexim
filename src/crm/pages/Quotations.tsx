@@ -125,7 +125,9 @@ export default function Quotations({ onNavigate }: { onNavigate?: (page: string)
 
   async function fetchQuotations() {
     setLoading(true);
-    const { data } = await supabase.from('quotations').select('*').order('created_at', { ascending: false });
+    // WBE Fresh quotations live in their own table (wbefresh_quotations) now —
+    // this page only ever sees export quotations.
+    const { data } = await supabase.from('wbe_quotations').select('*').order('created_at', { ascending: false });
     setQuotations((data as Quotation[]) ?? []);
     setLoading(false);
   }
@@ -136,8 +138,8 @@ export default function Quotations({ onNavigate }: { onNavigate?: (page: string)
     setErrors({});
     setSelectedCustomerId('');
     const year = new Date().getFullYear();
-    const { count } = await supabase.from('quotations').select('id', { count: 'exact', head: true });
-    setNextNumber(`WBE-QT-${year}-${String((count ?? 0) + 1).padStart(4, '0')}`);
+    const { data: nextNum } = await supabase.rpc('claim_next_document_number', { p_doc_type: 'quotation' });
+    setNextNumber(`WBE-QT-${year}-${String(nextNum ?? 1).padStart(4, '0')}`);
     setModalOpen(true);
   }
 
@@ -207,7 +209,7 @@ export default function Quotations({ onNavigate }: { onNavigate?: (page: string)
     }
 
     const { data } = await supabase
-      .from('quotations')
+      .from('wbe_quotations')
       .insert({
         quote_number: nextNumber,
         customer_id,
@@ -237,7 +239,7 @@ export default function Quotations({ onNavigate }: { onNavigate?: (page: string)
   }
 
   async function handleDelete(id: string) {
-    await supabase.from('quotations').delete().eq('id', id);
+    await supabase.from('wbe_quotations').delete().eq('id', id);
     setDeleteId(null);
     fetchQuotations();
   }

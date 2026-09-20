@@ -30,10 +30,14 @@ import About from './components/About';
 import CoconutExportFromIndia from './pages/CoconutExportFromIndia';
 import CardamomExportFromIndia from './pages/CardamomExportFromIndia';
 import BlackPepperExportFromIndia from './pages/BlackPepperExportFromIndia';
+import UnifiedLogin from './pages/UnifiedLogin';
+import DashboardChoice from './pages/DashboardChoice';
 
 // Lazy-load the CRM — only downloaded when user visits /crm
 // This keeps the website bundle small
 const CRMApp = lazy(() => import('./crm/CRMApp'));
+// Lazy-load WBE Fresh — public prices + supplier login, only on /wbe-fresh
+const WbeFreshApp = lazy(() => import('./wbe-fresh/WbeFreshApp'));
 
 function HomePage() {
   const sectionRefs = {
@@ -84,6 +88,10 @@ function App() {
       <ScrollToTop />
       <Routes>
 
+        {/* ── Single common login for every role — redirects to /crm or /wbe-fresh ── */}
+        <Route path="/login" element={<UnifiedLogin />} />
+        <Route path="/choose-dashboard" element={<DashboardChoice />} />
+
         {/* ── CRM — no website header/footer, full takeover ── */}
         <Route
           path="/crm/*"
@@ -98,6 +106,20 @@ function App() {
               </div>
             }>
               <CRMApp />
+            </Suspense>
+          }
+        />
+
+        {/* ── WBE Fresh — public prices / supplier login, no website header/footer ── */}
+        <Route
+          path="/wbe-fresh/*"
+          element={
+            <Suspense fallback={
+              <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f9fafb' }}>
+                <div style={{ width: 40, height: 40, border: '4px solid #14b8a6', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+              </div>
+            }>
+              <WbeFreshApp />
             </Suspense>
           }
         />

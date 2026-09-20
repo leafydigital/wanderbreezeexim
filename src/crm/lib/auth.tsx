@@ -14,6 +14,7 @@ export interface AppUser {
   username: string;
   email: string;
   phone: string;
+  whatsapp_number: string;
   role_id: string | null;
   is_active: boolean;
   avatar_url: string;
@@ -22,6 +23,9 @@ export interface AppUser {
   updated_at: string;
   deleted_at: string | null;
   roles?: Role;
+  /** Which physical users table this account lives in — 'wbe_users' (Admin/Staff,
+   *  export) or 'wbefresh_users' (Supplier/WBE Staff/WBE Customer, domestic). */
+  user_table?: 'wbe_users' | 'wbefresh_users';
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -123,13 +127,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // ── Refresh user ──────────────────────────────────────────
   async function refreshUser() {
     if (!user) return;
+    const table: 'wbe_users' | 'wbefresh_users' = user.user_table === 'wbefresh_users' ? 'wbefresh_users' : 'wbe_users';
     const { data } = await supabase
-      .from('users')
-      .select('id, name, username, email, phone, role_id, is_active, avatar_url, last_login_at, created_at, updated_at, deleted_at, roles(id, name, description, permissions)')
+      .from(table)
+      .select('id, name, username, email, phone, whatsapp_number, role_id, is_active, avatar_url, last_login_at, created_at, updated_at, deleted_at, roles(id, name, description, permissions)')
       .eq('id', user.id)
       .maybeSingle();
     if (data) {
-      const updated = data as unknown as AppUser;
+      const updated = { ...(data as unknown as AppUser), user_table: table };
       setUser(updated);
       setRole((updated.roles as Role) ?? null);
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(updated));

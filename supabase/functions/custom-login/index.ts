@@ -54,8 +54,8 @@ Deno.serve(async (req: Request) => {
       .eq("id", userRow.role_id)
       .maybeSingle();
 
-    // Update last_login_at via RPC
-    await supabaseAdmin.rpc("update_last_login", { p_user_id: userRow.id });
+    // Update last_login_at via RPC (in whichever table this user lives in)
+    await supabaseAdmin.rpc("update_last_login", { p_user_id: userRow.id, p_table: userRow.user_table });
 
     return json({
       user: {

@@ -22,6 +22,7 @@ interface BizStats {
   totalPIs: number;
   monthlyIncome: number;
   monthlyExpenses: number;
+  monthlySalesQty: number;
 }
 
 interface ProductPrice {
@@ -223,16 +224,23 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
   // ── Biz stats ─────────────────────────────────────────────────
   const loadBiz = useCallback(async () => {
     const { start, end } = currentMonthRange();
-    const [c, p, inv, exp] = await Promise.all([
-      supabase.from('customers').select('id', { count: 'exact', head: true }),
+    const [c, p, inv, exp, monthInvoices] = await Promise.all([
+      supabase.from('customers').select('id', { count: 'exact', head: true }).neq('segment', 'WBE-Fresh'),
       supabase.from('proforma_invoices').select('id', { count: 'exact', head: true }),
-      supabase.from('invoices').select('total').gte('issue_date', start).lte('issue_date', end).eq('status', 'Paid'),
+      supabase.from('wbe_invoices').select('total').gte('issue_date', start).lte('issue_date', end).eq('status', 'Paid'),
       supabase.from('expenses').select('amount').gte('expense_date', start).lte('expense_date', end),
+      // All invoices issued this month (any status), for the sales-qty total.
+      supabase.from('wbe_invoices').select('id, invoice_line_items:wbe_invoice_line_items(quantity)').gte('issue_date', start).lte('issue_date', end),
     ]);
+    const monthlySalesQty = (monthInvoices.data ?? []).reduce((sum: number, row: any) => {
+      const lines = row.invoice_line_items ?? [];
+      return sum + lines.reduce((s: number, l: any) => s + Number(l.quantity ?? 0), 0);
+    }, 0);
     setBizStats({
       totalCustomers: c.count ?? 0, totalPIs: p.count ?? 0,
       monthlyIncome: (inv.data ?? []).reduce((s, r) => s + Number(r.total), 0),
       monthlyExpenses: (exp.data ?? []).reduce((s, r) => s + Number(r.amount), 0),
+      monthlySalesQty,
     });
   }, []);
 
@@ -377,6 +385,7 @@ export default function Dashboard({ onNavigate }: DashboardProps) {
           { label: 'Customers',        val: bizStats?.totalCustomers ?? '—',                   icon: Users,        c: '#3B82F6', bg: '#EFF6FF', page: 'customers' },
           { label: 'Proforma Invoices',val: bizStats?.totalPIs ?? '—',                         icon: FileText,     c: '#0891B2', bg: '#ECFEFF', page: 'proforma'  },
           { label: 'Monthly Revenue',  val: bizStats ? formatCurrency(bizStats.monthlyIncome) : '—', icon: TrendingUp,  c: '#059669', bg: '#ECFDF5', page: 'invoices'  },
+          { label: 'Sales Qty (mo.)',  val: bizStats ? `${bizStats.monthlySalesQty.toLocaleString('en-IN')} units` : '—', icon: Package, c: '#7C3AED', bg: '#F5F3FF', page: 'invoices'  },
           { label: 'Monthly Expenses', val: bizStats ? formatCurrency(bizStats.monthlyExpenses) : '—', icon: TrendingDown, c: '#DC2626', bg: '#FEF2F2', page: 'expenses'  },
           { label: 'Net Profit',       val: bizStats ? formatCurrency(profit) : '—',           icon: DollarSign,   c: profit >= 0 ? '#059669' : '#DC2626', bg: profit >= 0 ? '#ECFDF5' : '#FEF2F2', page: 'invoices' },
         ].map(({ label, val, icon: Icon, c, bg, page }) => (

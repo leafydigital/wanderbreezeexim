@@ -23,9 +23,13 @@ Deno.serve(async (req: Request) => {
     const action = url.searchParams.get("action"); // create | update | delete | reset-password
 
     const body = await req.json();
+    // Which business this user belongs to — 'wbe_users' (Admin/Staff, export)
+    // or 'wbefresh_users' (Supplier/WBE Staff/WBE Customer, domestic).
+    // Defaults to wbe_users for backward compatibility with old callers.
+    const table = body.table === "wbefresh_users" ? "wbefresh_users" : "wbe_users";
 
     if (action === "create") {
-      const { name, username, password, email, phone, role_id, notes, created_by } = body;
+      const { name, username, password, email, phone, whatsapp_number, role_id, notes, created_by } = body;
 
       if (!name || !username || !password) {
         return json({ error: "Name, username, and password are required" }, 400);
@@ -37,24 +41,35 @@ Deno.serve(async (req: Request) => {
         return json({ error: "Password must be at least 6 characters" }, 400);
       }
 
+      if (phone) {
+        const { data: existingPhone } = await supabaseAdmin
+          .from(table)
+          .select("id")
+          .eq("phone", phone)
+          .is("deleted_at", null)
+          .maybeSingle();
+        if (existingPhone) return json({ error: "Phone number already exists" }, 409);
+      }
+
       const { data: hashData, error: hashError } = await supabaseAdmin.rpc("hash_password", { p_password: password });
       if (hashError) return json({ error: "Failed to hash password" }, 500);
       const password_hash = hashData;
 
       const { data, error } = await supabaseAdmin
-        .from("users")
+        .from(table)
         .insert({
           name,
           username: username.toLowerCase().trim(),
           password_hash,
           email: email ?? "",
           phone: phone ?? "",
+          whatsapp_number: whatsapp_number ?? "",
           role_id: role_id || null,
           notes: notes ?? "",
           created_by: created_by ?? null,
           is_active: true,
         })
-        .select("id, name, username, email, phone, role_id, is_active, avatar_url, last_login_at, created_at, updated_at, deleted_at, notes, roles(id, name, description, permissions)")
+        .select("id, name, username, email, phone, whatsapp_number, role_id, is_active, avatar_url, last_login_at, created_at, updated_at, deleted_at, notes, roles(id, name, description, permissions)")
         .maybeSingle();
 
       if (error) {
@@ -65,8 +80,19 @@ Deno.serve(async (req: Request) => {
     }
 
     if (action === "update") {
-      const { id, name, username, email, phone, role_id, is_active, notes, avatar_url, updated_by } = body;
+      const { id, name, username, email, phone, whatsapp_number, role_id, is_active, notes, avatar_url, updated_by } = body;
       if (!id) return json({ error: "User ID is required" }, 400);
+
+      if (phone) {
+        const { data: existingPhone } = await supabaseAdmin
+          .from(table)
+          .select("id")
+          .eq("phone", phone)
+          .neq("id", id)
+          .is("deleted_at", null)
+          .maybeSingle();
+        if (existingPhone) return json({ error: "Phone number already exists" }, 409);
+      }
 
       const updates: Record<string, unknown> = {
         updated_at: new Date().toISOString(),
@@ -76,16 +102,17 @@ Deno.serve(async (req: Request) => {
       if (username !== undefined) updates.username = username.toLowerCase().trim();
       if (email !== undefined) updates.email = email;
       if (phone !== undefined) updates.phone = phone;
+      if (whatsapp_number !== undefined) updates.whatsapp_number = whatsapp_number;
       if (role_id !== undefined) updates.role_id = role_id || null;
       if (is_active !== undefined) updates.is_active = is_active;
       if (notes !== undefined) updates.notes = notes;
       if (avatar_url !== undefined) updates.avatar_url = avatar_url;
 
       const { data, error } = await supabaseAdmin
-        .from("users")
+        .from(table)
         .update(updates)
         .eq("id", id)
-        .select("id, name, username, email, phone, role_id, is_active, avatar_url, last_login_at, created_at, updated_at, deleted_at, notes, roles(id, name, description, permissions)")
+        .select("id, name, username, email, phone, whatsapp_number, role_id, is_active, avatar_url, last_login_at, created_at, updated_at, deleted_at, notes, roles(id, name, description, permissions)")
         .maybeSingle();
 
       if (error) {
@@ -103,7 +130,7 @@ Deno.serve(async (req: Request) => {
       const { data: hashData2, error: hashError2 } = await supabaseAdmin.rpc("hash_password", { p_password: password });
       if (hashError2) return json({ error: "Failed to hash password" }, 500);
       const { error } = await supabaseAdmin
-        .from("users")
+        .from(table)
         .update({ password_hash: hashData2, updated_at: new Date().toISOString(), updated_by: updated_by ?? null })
         .eq("id", id);
 
@@ -117,7 +144,7 @@ Deno.serve(async (req: Request) => {
       if (!id) return json({ error: "User ID is required" }, 400);
 
       const { error } = await supabaseAdmin
-        .from("users")
+        .from(table)
         .update({
           deleted_at: new Date().toISOString(),
           deleted_by: deleted_by ?? null,

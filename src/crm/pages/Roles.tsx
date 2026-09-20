@@ -15,6 +15,8 @@ const ALL_MODULES: { key: string; label: string; description: string }[] = [
   { key: 'expenses', label: 'Expenses', description: 'Track and manage expenses' },
   { key: 'pricing', label: 'FOB / CIF Pricing', description: 'Use and save pricing calculations' },
   { key: 'freshpricing', label: 'WBE Fresh Pricing', description: 'Domestic cost/margin pricing and quotations for WBE Fresh Produce' },
+  { key: 'vegetables', label: 'Vegetables', description: 'Manage vegetable catalog, prices and margins (WBE Fresh)' },
+  { key: 'buyers', label: 'Buyers', description: 'Manage exporter/domestic/bulk buyer records (WBE Fresh)' },
   { key: 'documents', label: 'Documents', description: 'Upload and manage export documents' },
   { key: 'users', label: 'User Management', description: 'Manage system users (Admin only)' },
   { key: 'roles', label: 'Role Management', description: 'Manage roles and permissions (Admin only)' },

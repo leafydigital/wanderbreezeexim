@@ -32,12 +32,18 @@ async function callDelete(body: Record<string, unknown>) {
   return res.json();
 }
 
-const emptyCreate = { name: '', username: '', password: '', email: '', phone: '', role_id: '', notes: '' };
-const emptyEdit = { name: '', username: '', email: '', phone: '', role_id: '', is_active: true, notes: '' };
+const emptyCreate = { name: '', username: '', password: '', email: '', phone: '', whatsapp_number: '', role_id: '', notes: '' };
+const emptyEdit = { name: '', username: '', email: '', phone: '', whatsapp_number: '', role_id: '', is_active: true, notes: '' };
 const emptyPass = { password: '', confirm: '' };
 
-export default function Users() {
+// Which roles belong in which table — keeps the role dropdown from offering
+// a role that doesn't belong to the business this screen manages.
+const WBE_ROLE_NAMES = ['Admin', 'Staff'];
+const WBEFRESH_ROLE_NAMES = ['Supplier', 'WBE Staff', 'WBE Customer'];
+
+export default function Users({ table = 'wbe_users' }: { table?: 'wbe_users' | 'wbefresh_users' } = {}) {
   const { user: currentUser } = useAuth();
+  const allowedRoleNames = table === 'wbefresh_users' ? WBEFRESH_ROLE_NAMES : WBE_ROLE_NAMES;
   const [users, setUsers] = useState<AppUser[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(true);
@@ -72,14 +78,14 @@ export default function Users() {
     setLoading(true);
     const [usersRes, rolesRes] = await Promise.all([
       supabase
-        .from('users')
-        .select('id, name, username, email, phone, role_id, is_active, avatar_url, last_login_at, created_at, updated_at, deleted_at, notes, roles(id, name, description, permissions)')
+        .from(table)
+        .select('id, name, username, email, phone, whatsapp_number, role_id, is_active, avatar_url, last_login_at, created_at, updated_at, deleted_at, notes, roles(id, name, description, permissions)')
         .is('deleted_at', null)
         .order('created_at', { ascending: false }),
       supabase.from('roles').select('*').order('name'),
     ]);
-    setUsers((usersRes.data as AppUser[]) ?? []);
-    setRoles((rolesRes.data as Role[]) ?? []);
+    setUsers((usersRes.data as unknown as AppUser[]) ?? []);
+    setRoles(((rolesRes.data as Role[]) ?? []).filter(r => allowedRoleNames.includes(r.name)));
     setLoading(false);
   }
 
@@ -90,6 +96,7 @@ export default function Users() {
       username: u.username,
       email: u.email ?? '',
       phone: u.phone ?? '',
+      whatsapp_number: u.whatsapp_number ?? '',
       role_id: u.role_id ?? '',
       is_active: u.is_active,
       notes: (u as any).notes ?? '',
@@ -114,6 +121,7 @@ export default function Users() {
     setCreating(true);
     const result = await callManageUser('create', {
       ...createForm,
+      table,
       role_id: createForm.role_id || null,
       created_by: currentUser?.id ?? null,
     });
@@ -134,6 +142,7 @@ export default function Users() {
     setSaving(true);
     const result = await callManageUser('update', {
       id: editUser.id,
+      table,
       ...editForm,
       role_id: editForm.role_id || null,
       updated_by: currentUser?.id ?? null,
@@ -153,6 +162,7 @@ export default function Users() {
     setSavingPass(true);
     const result = await callManageUser('reset-password', {
       id: passUser.id,
+      table,
       password: passForm.password,
       updated_by: currentUser?.id ?? null,
     });
@@ -165,6 +175,7 @@ export default function Users() {
   async function handleToggleActive(u: AppUser) {
     await callManageUser('update', {
       id: u.id,
+      table,
       is_active: !u.is_active,
       updated_by: currentUser?.id ?? null,
     });
@@ -174,7 +185,7 @@ export default function Users() {
   async function handleDelete() {
     if (!deleteId) return;
     setDeleting(true);
-    await callDelete({ id: deleteId, deleted_by: currentUser?.id ?? null });
+    await callDelete({ id: deleteId, table, deleted_by: currentUser?.id ?? null });
     setDeleteId(null);
     setDeleting(false);
     fetchData();
@@ -353,6 +364,10 @@ export default function Users() {
               <label className="block text-xs font-medium text-gray-700 mb-1">Phone</label>
               <input value={createForm.phone} onChange={e => setCreateForm(f => ({ ...f, phone: e.target.value }))} placeholder="+91 99999 00000" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" />
             </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">WhatsApp Number</label>
+              <input value={createForm.whatsapp_number} onChange={e => setCreateForm(f => ({ ...f, whatsapp_number: e.target.value }))} placeholder="+91 99999 00000" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" />
+            </div>
             <div className="col-span-2">
               <label className="block text-xs font-medium text-gray-700 mb-1">Role</label>
               <select value={createForm.role_id} onChange={e => setCreateForm(f => ({ ...f, role_id: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
@@ -400,6 +415,10 @@ export default function Users() {
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">Phone</label>
               <input value={editForm.phone} onChange={e => setEditForm(f => ({ ...f, phone: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">WhatsApp Number</label>
+              <input value={editForm.whatsapp_number} onChange={e => setEditForm(f => ({ ...f, whatsapp_number: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" />
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">Role</label>

@@ -5,9 +5,9 @@
  * the website's Header/Footer.
  */
 import { useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './lib/auth';
 import Layout, { Page } from './components/Layout';
-import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Customers from './pages/Customers';
 import Suppliers from './pages/Suppliers';
@@ -16,7 +16,6 @@ import Invoices from './pages/Invoices';
 import Quotations from './pages/Quotations';
 import Expenses from './pages/Expenses';
 import PricingCalculator from './pages/PricingCalculator';
-import FreshPricingCalculator from './pages/FreshPricingCalculator';
 import Documents from './pages/Documents';
 import Products from './pages/Products';
 import Users from './pages/Users';
@@ -42,11 +41,17 @@ function CRMInner() {
     );
   }
 
-  if (!user) return <Login />;
+  if (!user) return <Navigate to="/login" replace />;
+
+  // Admin chose the Domestic Dashboard at login (or switched to it from the
+  // sidebar) — send them to /wbe-fresh's full admin console instead of /crm.
+  if (sessionStorage.getItem('wbe_dashboard_mode') === 'domestic') {
+    return <Navigate to="/wbe-fresh" replace />;
+  }
 
   const firstAccessible = (
     ['dashboard','customers','suppliers','products','proforma','invoices','quotations',
-     'expenses','pricing','freshpricing','documents','leadradar','outreachtracker','users','roles','companysettings'] as Page[]
+     'expenses','pricing','documents','leadradar','outreachtracker','users','roles','companysettings'] as Page[]
   ).find(p => can(p));
 
   const effectivePage = can(activePage) ? activePage : (firstAccessible ?? 'dashboard');
@@ -58,11 +63,10 @@ function CRMInner() {
         <div className={effectivePage === 'customers'       ? '' : 'hidden'}><Customers /></div>
         <div className={effectivePage === 'suppliers'       ? '' : 'hidden'}><Suppliers /></div>
         <div className={effectivePage === 'proforma'        ? '' : 'hidden'}><ProformaInvoices /></div>
-        <div className={effectivePage === 'invoices'        ? '' : 'hidden'}><Invoices /></div>
+        <div className={effectivePage === 'invoices'        ? '' : 'hidden'}><Invoices scope="export" /></div>
         <div className={effectivePage === 'quotations'      ? '' : 'hidden'}><Quotations onNavigate={(p) => setActivePage(p as Page)} /></div>
         <div className={effectivePage === 'expenses'        ? '' : 'hidden'}><Expenses /></div>
         <div className={effectivePage === 'pricing'         ? '' : 'hidden'}><PricingCalculator /></div>
-        <div className={effectivePage === 'freshpricing'    ? '' : 'hidden'}><FreshPricingCalculator /></div>
         <div className={effectivePage === 'documents'       ? '' : 'hidden'}><Documents /></div>
         <div className={effectivePage === 'products'        ? '' : 'hidden'}><Products /></div>
         <div className={effectivePage === 'users'           ? '' : 'hidden'}><Users /></div>

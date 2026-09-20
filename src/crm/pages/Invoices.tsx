@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import {
   supabase, Invoice, Customer, ProformaInvoice,
-  Currency, Incoterms, InvoiceStatus, BankAccount,
+  Currency, Incoterms, InvoiceStatus, BankAccount, Vegetable,
 } from '../lib/supabase';
 import Modal from '../components/Modal';
 import StatusBadge from '../components/StatusBadge';
@@ -13,15 +13,17 @@ import { formatCurrency, formatDate, today } from '../lib/utils';
 
 // ─── Extra types for new fields ───────────────────────────────────────────────
 
-type OrderStatus   = 'Order Placed' | 'Out for Delivery' | 'Delivered' | 'Cancelled';
+type OrderStatus   = 'Order Placed' | 'Invoice Generated' | 'Packed' | 'In Transit' | 'Delivered' | 'Cancelled';
 type PaymentStatus = 'Pending' | 'Advance Paid' | 'Fully Paid' | 'Credit';
-type PaymentMethod = '' | 'Cash' | 'UPI' | 'Bank Transfer' | 'Cheque';
+type PaymentMethod = '' | 'Cash' | 'UPI' | 'Bank Transfer';
+type PaymentTermsOption = '' | 'Advance Payment' | 'Fully Paid' | 'On Delivery';
 type ModalMode     = 'invoice' | 'bill';
 
 // ─── Line item ────────────────────────────────────────────────────────────────
 
 interface LineItemForm {
   product_name: string;
+  vegetable_id: string;
   hs_code: string;
   description: string;
   quantity: string;
@@ -31,7 +33,7 @@ interface LineItemForm {
 }
 
 const emptyLine = (defaultGst: string = '0'): LineItemForm => ({
-  product_name: '', hs_code: '', description: '', quantity: '', unit: 'KG', unit_price: '', gst_percentage: defaultGst,
+  product_name: '', vegetable_id: '', hs_code: '', description: '', quantity: '', unit: 'KG', unit_price: '', gst_percentage: defaultGst,
 });
 
 const GST_RATES = [
@@ -66,7 +68,8 @@ const emptyForm = {
   country_of_origin: 'India',
   port_of_loading:   '',
   port_of_discharge: '',
-  payment_terms:     '',
+  payment_terms:     '' as PaymentTermsOption | string,
+  discount_amount:   '',
   notes:             '',
   bank_account_id:   '',
   // invoice status (existing)
@@ -81,10 +84,12 @@ const emptyForm = {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const ORDER_STATUS_COLORS: Record<OrderStatus, string> = {
-  'Order Placed':     'bg-blue-50 text-blue-700',
-  'Out for Delivery': 'bg-amber-50 text-amber-700',
-  'Delivered':        'bg-green-50 text-green-700',
-  'Cancelled':        'bg-red-50 text-red-600',
+  'Order Placed':      'bg-blue-50 text-blue-700',
+  'Invoice Generated': 'bg-indigo-50 text-indigo-700',
+  'Packed':            'bg-purple-50 text-purple-700',
+  'In Transit':        'bg-amber-50 text-amber-700',
+  'Delivered':         'bg-green-50 text-green-700',
+  'Cancelled':         'bg-red-50 text-red-600',
 };
 
 const PAYMENT_STATUS_COLORS: Record<PaymentStatus, string> = {
@@ -96,11 +101,17 @@ const PAYMENT_STATUS_COLORS: Record<PaymentStatus, string> = {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function Invoices() {
+export default function Invoices({ scope }: { scope?: 'export' | 'domestic' } = {}) {
+  // WBE (export) and WBE-Fresh (domestic bills) now live in separate tables —
+  // this page always operates on the one matching its scope.
+  const table     = scope === 'domestic' ? 'wbefresh_invoices' : 'wbe_invoices';
+  const lineTable = scope === 'domestic' ? 'wbefresh_invoice_line_items' : 'wbe_invoice_line_items';
+
   const [invoices, setInvoices]           = useState<Invoice[]>([]);
   const [customers, setCustomers]         = useState<Customer[]>([]);
   const [pis, setPIs]                     = useState<ProformaInvoice[]>([]);
   const [banks, setBanks]                 = useState<BankAccount[]>([]);
+  const [vegetables, setVegetables]       = useState<Vegetable[]>([]);
   const [company, setCompany]             = useState<CompanyProfile | null>(null);
   const [loading, setLoading]             = useState(true);
   const [search, setSearch]               = useState('');
@@ -109,7 +120,7 @@ export default function Invoices() {
   const [filterOrderSt, setFilterOrderSt] = useState('all');
 
   const [modalOpen, setModalOpen]   = useState(false);
-  const [modalMode, setModalMode]   = useState<ModalMode>('invoice');
+  const [modalMode, setModalMode]   = useState<ModalMode>(scope === 'domestic' ? 'bill' : 'invoice');
   const [previewInv, setPreviewInv] = useState<Invoice | null>(null);
   const [deleteId, setDeleteId]     = useState<string | null>(null);
 
@@ -137,12 +148,12 @@ export default function Invoices() {
 
   async function fetchData() {
     setLoading(true);
-    const [invRes, custRes, piRes, bankRes] = await Promise.all([
-      supabase.from('invoices')
-        .select('*, customers(*), invoice_line_items(*)')
+    const [invRes, custRes, piRes, bankRes, vegRes] = await Promise.all([
+      supabase.from(table)
+        .select(`*, customers(*), invoice_line_items:${lineTable}(*)`)
         .order('created_at', { ascending: false }),
       supabase.from('customers')
-        .select('id, customer_name, company_name, country, type, address, email, phone, gstin, tax_id')
+        .select('*')
         .order('customer_name'),
       supabase.from('proforma_invoices')
         .select('id, pi_number, customer_id')
@@ -150,24 +161,30 @@ export default function Invoices() {
       supabase.from('bank_accounts')
         .select('*')
         .order('is_active', { ascending: false }),
+      supabase.from('wbefresh_vegetables')
+        .select('*')
+        .eq('is_approved', true)
+        .eq('is_active', true)
+        .order('name_en'),
     ]);
     setInvoices((invRes.data as Invoice[]) ?? []);
     setCustomers((custRes.data as Customer[]) ?? []);
     setPIs((piRes.data as ProformaInvoice[]) ?? []);
     setBanks((bankRes.data as BankAccount[]) ?? []);
+    setVegetables((vegRes.data as Vegetable[]) ?? []);
     setLoading(false);
   }
 
   // ── Derived ───────────────────────────────────────────────────────────────
 
-  const modalCustomers   = customers.filter(c =>
+  const modalCustomers    = customers.filter(c =>
     modalMode === 'invoice' ? c.type === 'International' : c.type === 'Domestic'
   );
-  const selectedCustomer = customers.find(c => c.id === form.customer_id);
-  const isDomestic       = selectedCustomer?.type === 'Domestic';
-  const currencySymbol   = isDomestic ? 'INR' : form.currency;
-  const filteredPIs      = pis.filter(p => !form.customer_id || p.customer_id === form.customer_id);
-  const subtotal         = lineItems.reduce((s, l) =>
+  const selectedCustomer  = customers.find(c => c.id === form.customer_id);
+  const isDomestic        = selectedCustomer?.type === 'Domestic' || modalMode === 'bill';
+  const currencySymbol    = isDomestic ? 'INR' : form.currency;
+  const filteredPIs       = pis.filter(p => !form.customer_id || p.customer_id === form.customer_id);
+  const subtotal          = lineItems.reduce((s, l) =>
     s + (parseFloat(l.quantity) || 0) * (parseFloat(l.unit_price) || 0), 0);
   const gstBreakdown = Object.entries(
     lineItems.reduce((acc: Record<string, number>, l) => {
@@ -179,8 +196,9 @@ export default function Invoices() {
     }, {})
   ).map(([rate, amount]) => ({ rate: parseFloat(rate), amount }));
   const gstTotal          = gstBreakdown.reduce((s, g) => s + g.amount, 0);
-  const grandTotal        = subtotal + gstTotal;
-  const balance          = grandTotal - (parseFloat(form.advance_amount) || 0);
+  const discountAmount    = parseFloat(form.discount_amount) || 0;
+  const grandTotal        = Math.max(0, subtotal + gstTotal - discountAmount);
+  const balance            = grandTotal - (parseFloat(form.advance_amount) || 0);
 
   const isBillRecord = (inv: Invoice) =>
     inv.currency === 'INR' || (inv.customers as Customer | undefined)?.type === 'Domestic';
@@ -190,7 +208,7 @@ export default function Invoices() {
   function validate() {
     const e: Record<string, string> = {};
     if (!form.invoice_number.trim()) e.invoice_number = 'Number required';
-    if (!form.customer_id)           e.customer_id    = 'Customer required';
+    if (!form.customer_id) e.customer_id = modalMode === 'bill' ? 'Buyer required' : 'Customer required';
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -203,10 +221,12 @@ export default function Invoices() {
     const payload: Record<string, any> = {
       ...form,
       pi_id:          form.pi_id || null,
+      customer_id:    form.customer_id || null,
       currency:       isDomestic ? 'INR' : form.currency,
       due_date:       form.due_date     || null,
       delivery_date:  form.delivery_date || null,
       advance_amount: parseFloat(form.advance_amount) || 0,
+      discount_amount: parseFloat(form.discount_amount) || 0,
       bank_account_id: form.bank_account_id || null,
       subtotal,
       total: grandTotal,
@@ -218,15 +238,16 @@ export default function Invoices() {
       payload.payment_status = null;
       payload.payment_method = null;
       payload.advance_amount = 0;
+      payload.discount_amount = 0;
       payload.delivery_date  = null;
     }
 
     let invId = editId;
     if (editId) {
-      await supabase.from('invoices').update(payload).eq('id', editId);
-      await supabase.from('invoice_line_items').delete().eq('invoice_id', editId);
+      await supabase.from(table).update(payload).eq('id', editId);
+      await supabase.from(lineTable).delete().eq('invoice_id', editId);
     } else {
-      const { data } = await supabase.from('invoices').insert(payload).select('id').single();
+      const { data } = await supabase.from(table).insert(payload).select('id').single();
       invId = data?.id;
     }
     if (invId) {
@@ -234,6 +255,7 @@ export default function Invoices() {
         .filter(l => l.product_name.trim())
         .map((l, i) => ({
           invoice_id:   invId,
+          vegetable_id: (l.vegetable_id && l.vegetable_id !== '__custom__') ? l.vegetable_id : null,
           product_name: l.product_name,
           hs_code:      l.hs_code,
           description:  l.description,
@@ -244,7 +266,7 @@ export default function Invoices() {
           gst_percentage: parseFloat(l.gst_percentage) || 0,
           sort_order:   i,
         }));
-      if (items.length > 0) await supabase.from('invoice_line_items').insert(items);
+      if (items.length > 0) await supabase.from(lineTable).insert(items);
     }
     await fetchData();
     setModalOpen(false);
@@ -257,7 +279,7 @@ export default function Invoices() {
   }
 
   async function handleDelete(id: string) {
-    await supabase.from('invoices').delete().eq('id', id);
+    await supabase.from(table).delete().eq('id', id);
     setDeleteId(null);
     fetchData();
   }
@@ -280,6 +302,7 @@ export default function Invoices() {
       port_of_loading:   inv.port_of_loading,
       port_of_discharge: inv.port_of_discharge,
       payment_terms:     inv.payment_terms,
+      discount_amount:   r.discount_amount > 0 ? String(r.discount_amount) : '',
       notes:             inv.notes,
       bank_account_id:   r.bank_account_id ?? '',
       status:            inv.status,
@@ -290,6 +313,7 @@ export default function Invoices() {
     });
     setLineItems((inv.invoice_line_items ?? []).map(l => ({
       product_name: l.product_name,
+      vegetable_id: (l as any).vegetable_id ?? '',
       hs_code:      l.hs_code,
       description:  l.description,
       quantity:     String(l.quantity),
@@ -305,12 +329,12 @@ export default function Invoices() {
   async function openCreate(mode: ModalMode) {
     setModalMode(mode);
     const prefix = mode === 'invoice' ? 'WBE-INV' : 'WBE-BILL';
-    const { count } = await supabase.from('invoices').select('id', { count: 'exact', head: true });
+    const { data: nextNum } = await supabase.rpc('claim_next_document_number', { p_doc_type: 'invoice' });
     const year = new Date().getFullYear();
     const activeBank = banks.find(b => b.is_active);
     setForm({
       ...emptyForm,
-      invoice_number: `${prefix}-${year}-${String((count ?? 0) + 1).padStart(4, '0')}`,
+      invoice_number: `${prefix}-${year}-${String(nextNum ?? 1).padStart(4, '0')}`,
       bank_account_id: activeBank?.id ?? '',
     });
     setLineItems([emptyLine(mode === 'bill' ? '5' : '0')]);
@@ -321,12 +345,12 @@ export default function Invoices() {
 
   async function openCreateFromQuotation(payload: { customer_id: string | null; payment_terms: string; notes: string; lineItems: LineItemForm[] }) {
     setModalMode('bill');
-    const { count } = await supabase.from('invoices').select('id', { count: 'exact', head: true });
+    const { data: nextNum } = await supabase.rpc('claim_next_document_number', { p_doc_type: 'invoice' });
     const year = new Date().getFullYear();
     const activeBank = banks.find(b => b.is_active);
     setForm({
       ...emptyForm,
-      invoice_number: `WBE-BILL-${year}-${String((count ?? 0) + 1).padStart(4, '0')}`,
+      invoice_number: `WBE-BILL-${year}-${String(nextNum ?? 1).padStart(4, '0')}`,
       bank_account_id: activeBank?.id ?? '',
       customer_id: payload.customer_id ?? '',
       payment_terms: payload.payment_terms,
@@ -381,7 +405,10 @@ export default function Invoices() {
       || (filterType === 'bill'    &&  isBillRecord(inv))
       || (filterType === 'invoice' && !isBillRecord(inv));
     const matchOrderSt  = filterOrderSt === 'all' || r.order_status === filterOrderSt;
-    return matchSearch && matchStatus && matchType && matchOrderSt;
+    const matchScope    = !scope
+      || (scope === 'export'   && !isBillRecord(inv))
+      || (scope === 'domestic' &&  isBillRecord(inv));
+    return matchSearch && matchStatus && matchType && matchOrderSt && matchScope;
   });
 
   const modalTitle = editId
@@ -395,14 +422,18 @@ export default function Invoices() {
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
-        <p className="text-sm text-gray-500">{invoices.length} records</p>
+        <p className="text-sm text-gray-500">{filtered.length} records</p>
         <div className="flex gap-2">
-          <button onClick={() => openCreate('bill')} className="flex items-center gap-2 bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-amber-700 transition-colors">
-            <ShoppingBag size={15} /> Create Bill
-          </button>
-          <button onClick={() => openCreate('invoice')} className="flex items-center gap-2 bg-teal-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-teal-700 transition-colors">
-            <FileText size={15} /> Create Invoice
-          </button>
+          {scope !== 'export' && (
+            <button onClick={() => openCreate('bill')} className="flex items-center gap-2 bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-amber-700 transition-colors">
+              <ShoppingBag size={15} /> Create Bill
+            </button>
+          )}
+          {scope !== 'domestic' && (
+            <button onClick={() => openCreate('invoice')} className="flex items-center gap-2 bg-teal-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-teal-700 transition-colors">
+              <FileText size={15} /> Create Invoice
+            </button>
+          )}
         </div>
       </div>
 
@@ -412,15 +443,19 @@ export default function Invoices() {
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by number or customer..." className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" />
         </div>
-        <select value={filterType} onChange={e => setFilterType(e.target.value as any)} className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
-          <option value="all">All Types</option>
-          <option value="invoice">Invoices (Export)</option>
-          <option value="bill">Bills (Domestic)</option>
-        </select>
+        {!scope && (
+          <select value={filterType} onChange={e => setFilterType(e.target.value as any)} className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+            <option value="all">All Types</option>
+            <option value="invoice">Invoices (Export)</option>
+            <option value="bill">Bills (Domestic)</option>
+          </select>
+        )}
         <select value={filterOrderSt} onChange={e => setFilterOrderSt(e.target.value)} className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
           <option value="all">All Orders</option>
           <option>Order Placed</option>
-          <option>Out for Delivery</option>
+          <option>Invoice Generated</option>
+          <option>Packed</option>
+          <option>In Transit</option>
           <option>Delivered</option>
           <option>Cancelled</option>
         </select>
@@ -542,17 +577,22 @@ export default function Invoices() {
               {errors.invoice_number && <p className="text-xs text-red-500 mt-1">{errors.invoice_number}</p>}
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">{modalMode === 'bill' ? 'Domestic Customer *' : 'Export Customer *'}</label>
+              <label className="block text-xs font-medium text-gray-700 mb-1">{modalMode === 'bill' ? 'Buyer *' : 'Export Customer *'}</label>
               <select value={form.customer_id} onChange={e => setForm(f => ({ ...f, customer_id: e.target.value, pi_id: '' }))} className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 ${errors.customer_id ? 'border-red-400' : 'border-gray-200'}`}>
-                <option value="">{modalMode === 'bill' ? 'Select domestic customer...' : 'Select export customer...'}</option>
-                {modalCustomers.map(c => <option key={c.id} value={c.id}>{c.customer_name}{c.company_name ? ` (${c.company_name})` : ''}</option>)}
+                <option value="">{modalMode === 'bill' ? 'Select buyer...' : 'Select export customer...'}</option>
+                {modalCustomers.map(c => (
+                  <option key={c.id} value={c.id}>
+                    {c.customer_name}{c.shop_name ? ` (${c.shop_name})` : c.company_name ? ` (${c.company_name})` : ''}{c.buyer_type ? ` — ${c.buyer_type}` : ''}
+                  </option>
+                ))}
               </select>
               {errors.customer_id && <p className="text-xs text-red-500 mt-1">{errors.customer_id}</p>}
-              {modalCustomers.length === 0 && <p className="text-xs text-amber-500 mt-1">No {modalMode === 'bill' ? 'domestic' : 'international'} customers found.</p>}
+              {modalMode === 'bill' && modalCustomers.length === 0 && <p className="text-xs text-amber-500 mt-1">No domestic buyers found — add one on the Buyers page first.</p>}
+              {modalMode === 'invoice' && modalCustomers.length === 0 && <p className="text-xs text-amber-500 mt-1">No international customers found.</p>}
             </div>
           </div>
 
-          {/* ── Customer address auto-display ──────────────────────────────── */}
+          {/* ── Customer/buyer address auto-display ──────────────────────────── */}
           {selectedCustomer && (selectedCustomer.address || selectedCustomer.phone || selectedCustomer.email) && (
             <div className="flex items-start gap-2 px-3 py-2.5 bg-gray-50 rounded-lg border border-gray-200 text-xs text-gray-600">
               <MapPin size={13} className="text-gray-400 mt-0.5 flex-shrink-0" />
@@ -561,6 +601,8 @@ export default function Invoices() {
                 {selectedCustomer.address && <span className="ml-1">{selectedCustomer.address}</span>}
                 {selectedCustomer.phone && <span className="ml-2 text-gray-500">· {selectedCustomer.phone}</span>}
                 {selectedCustomer.email && <span className="ml-2 text-gray-500">· {selectedCustomer.email}</span>}
+                {selectedCustomer.buyer_type === 'Exporter' && <span className="ml-2 text-amber-600 font-medium">· Domestic prices shown; export grade +₹5–10/kg</span>}
+                {selectedCustomer.buyer_type === 'Bulk Buyer' && <span className="ml-2 text-amber-600 font-medium">· Apply bulk discount below</span>}
               </div>
             </div>
           )}
@@ -644,7 +686,9 @@ export default function Invoices() {
                   <label className="block text-xs font-medium text-gray-700 mb-1">Order Status</label>
                   <select value={form.order_status} onChange={e => setForm(f => ({ ...f, order_status: e.target.value as OrderStatus }))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
                     <option>Order Placed</option>
-                    <option>Out for Delivery</option>
+                    <option>Invoice Generated</option>
+                    <option>Packed</option>
+                    <option>In Transit</option>
                     <option>Delivered</option>
                     <option>Cancelled</option>
                   </select>
@@ -669,7 +713,6 @@ export default function Invoices() {
                     <option>Cash</option>
                     <option>UPI</option>
                     <option>Bank Transfer</option>
-                    <option>Cheque</option>
                   </select>
                 </div>
                 <div>
@@ -692,16 +735,39 @@ export default function Invoices() {
           {/* ── Payment terms + Invoice status ─────────────────────────────── */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Payment Terms / Notes</label>
-              <input value={form.payment_terms} onChange={e => setForm(f => ({ ...f, payment_terms: e.target.value }))} placeholder={modalMode === 'bill' ? 'e.g. 50% advance, 50% on delivery' : 'e.g. 30 days LC'} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" />
+              <label className="block text-xs font-medium text-gray-700 mb-1">Payment Terms</label>
+              {modalMode === 'bill' ? (
+                <select value={form.payment_terms} onChange={e => setForm(f => ({ ...f, payment_terms: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+                  <option value="">Select terms...</option>
+                  <option>Advance Payment</option>
+                  <option>Fully Paid</option>
+                  <option>On Delivery</option>
+                </select>
+              ) : (
+                <input value={form.payment_terms} onChange={e => setForm(f => ({ ...f, payment_terms: e.target.value }))} placeholder="e.g. 30 days LC" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" />
+              )}
             </div>
-            {modalMode === 'invoice' && (
+            {modalMode === 'invoice' ? (
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">Status</label>
                 <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value as InvoiceStatus }))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
                   <option>Draft</option><option>Sent</option><option>Paid</option>
                   <option>Overdue</option><option>Cancelled</option>
                 </select>
+              </div>
+            ) : (
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Discount (₹)</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-500">₹</span>
+                  <input
+                    type="number"
+                    value={form.discount_amount}
+                    onChange={e => setForm(f => ({ ...f, discount_amount: e.target.value }))}
+                    placeholder="0.00"
+                    className="w-full border border-gray-200 rounded-lg pl-7 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  />
+                </div>
               </div>
             )}
           </div>
@@ -764,12 +830,42 @@ export default function Invoices() {
                   {lineItems.map((l, i) => (
                     <tr key={i} className="border-t border-gray-100">
                       <td className="px-3 py-2">
-                        <input
-                          value={l.product_name}
-                          onChange={e => setLineItems(items => items.map((x, j) => j === i ? { ...x, product_name: e.target.value } : x))}
-                          placeholder="Product name or description (e.g. Transportation)"
-                          className="w-full border border-gray-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-teal-500"
-                        />
+                        {modalMode === 'bill' ? (
+                          <select
+                            value={l.vegetable_id}
+                            onChange={e => {
+                              const vegId = e.target.value;
+                              const veg = vegetables.find(v => v.id === vegId);
+                              setLineItems(items => items.map((x, j) => j === i ? {
+                                ...x,
+                                vegetable_id: vegId,
+                                product_name: veg ? veg.name_en : x.product_name,
+                                unit: veg ? veg.unit.toUpperCase() : x.unit,
+                                unit_price: veg ? String(veg.final_price) : x.unit_price,
+                              } : x));
+                            }}
+                            className="w-full border border-gray-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-teal-500"
+                          >
+                            <option value="">Select vegetable...</option>
+                            {vegetables.map(v => <option key={v.id} value={v.id}>{v.name_en} — ₹{v.final_price}/{v.unit}</option>)}
+                            <option value="__custom__">Other / custom item...</option>
+                          </select>
+                        ) : (
+                          <input
+                            value={l.product_name}
+                            onChange={e => setLineItems(items => items.map((x, j) => j === i ? { ...x, product_name: e.target.value } : x))}
+                            placeholder="Product name or description (e.g. Transportation)"
+                            className="w-full border border-gray-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-teal-500"
+                          />
+                        )}
+                        {modalMode === 'bill' && l.vegetable_id === '__custom__' && (
+                          <input
+                            value={l.product_name}
+                            onChange={e => setLineItems(items => items.map((x, j) => j === i ? { ...x, product_name: e.target.value } : x))}
+                            placeholder="Custom item name"
+                            className="w-full mt-1 border border-gray-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-teal-500"
+                          />
+                        )}
                       </td>
                       <td className="px-3 py-2">
                         <input type="number" value={l.quantity} onChange={e => setLineItems(items => items.map((x, j) => j === i ? { ...x, quantity: e.target.value } : x))} className="w-full border border-gray-200 rounded px-2 py-1.5 text-sm focus:outline-none" />
@@ -811,7 +907,15 @@ export default function Invoices() {
                       <td></td>
                     </tr>
                   ))}
-                  {gstTotal > 0 && (
+                  {/* Discount — bill only */}
+                  {modalMode === 'bill' && discountAmount > 0 && (
+                    <tr className="bg-gray-50">
+                      <td colSpan={5} className="px-3 py-1.5 text-xs text-gray-600 text-right">Discount</td>
+                      <td className="px-3 py-1.5 text-right text-xs font-semibold text-gray-700">− {formatCurrency(discountAmount, 'INR')}</td>
+                      <td></td>
+                    </tr>
+                  )}
+                  {(gstTotal > 0 || discountAmount > 0) && (
                     <tr className="border-t border-gray-200 bg-gray-50">
                       <td colSpan={5} className="px-3 py-2 text-sm font-bold text-gray-900 text-right">Grand Total</td>
                       <td className="px-3 py-2 text-right text-sm font-bold text-gray-900">{formatCurrency(grandTotal, currencySymbol)}</td>
@@ -886,10 +990,11 @@ function InvoicePreview({ inv, banks, company }: { inv: Invoice; banks: BankAcco
   const r        = inv as any;
   const customer = inv.customers as Customer | undefined;
   const items    = inv.invoice_line_items ?? [];
-  const isDomestic = customer?.type === 'Domestic';
+  const isDomestic = inv.currency === 'INR' || customer?.type === 'Domestic';
   const cur      = isDomestic ? 'INR' : inv.currency;
   const docLabel = isDomestic ? 'BILL' : 'INVOICE';
   const advance  = r.advance_amount ?? 0;
+  const discount = r.discount_amount ?? 0;
   const balance  = inv.total - advance;
   const bank: BankAccount | undefined = banks.find(b => b.id === r.bank_account_id) ?? banks.find(b => b.is_active);
   const printedSubtotal = items.reduce((s, item) => s + Number(item.total_price), 0);
@@ -905,6 +1010,7 @@ function InvoicePreview({ inv, banks, company }: { inv: Invoice; banks: BankAcco
   const companyName = company?.company_name || 'Wander Breeze Exim';
   const companyAddressParts = [company?.address, company?.city, company?.state, company?.pincode].filter(Boolean);
   const companyContactParts = [company?.phone, company?.email].filter(Boolean);
+  const isWbeFresh = customer?.segment === 'WBE-Fresh';
 
   return (
     <div style={{ fontFamily: 'Arial, sans-serif', fontSize: 13, color: '#1a1a1a' }}>
@@ -912,7 +1018,14 @@ function InvoicePreview({ inv, banks, company }: { inv: Invoice; banks: BankAcco
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
-          <div style={{ fontSize: 22, fontWeight: 700, color: '#0f766e' }}>{companyName.toUpperCase()}</div>
+          {isWbeFresh ? (
+            <>
+              <div style={{ fontSize: 22, fontWeight: 700, color: '#0f766e', lineHeight: 1.15 }}>WBE FRESH</div>
+              <div style={{ fontSize: 11, fontWeight: 500, color: '#64748b' }}>(WANDER BREEZE EXIM PVT LTD)</div>
+            </>
+          ) : (
+            <div style={{ fontSize: 22, fontWeight: 700, color: '#0f766e' }}>{companyName.toUpperCase()}</div>
+          )}
           {companyAddressParts.length > 0 && <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>{companyAddressParts.join(', ')}</div>}
           {companyContactParts.length > 0 && <div style={{ fontSize: 12, color: '#64748b' }}>{companyContactParts.join(' · ')}</div>}
           {company?.gstin && <div style={{ fontSize: 12, color: '#64748b' }}>GSTIN: {company.gstin}</div>}
@@ -939,13 +1052,15 @@ function InvoicePreview({ inv, banks, company }: { inv: Invoice; banks: BankAcco
           {customer && (
             <>
               <div style={{ fontWeight: 600 }}>{customer.customer_name}</div>
-              {customer.company_name && <div>{customer.company_name}</div>}
-              {customer.address && <div style={{ color: '#475569', fontSize: 12 }}>{customer.address}</div>}
+              {isDomestic && customer.shop_name && <div>{customer.shop_name}</div>}
+              {!isDomestic && customer.company_name && <div>{customer.company_name}</div>}
+              {customer.address && <div style={{ color: '#475569', fontSize: 12 }}>{[customer.address, customer.city, customer.district].filter(Boolean).join(', ')}</div>}
               {customer.country && !isDomestic && <div style={{ color: '#475569', fontSize: 12 }}>{customer.country}</div>}
               {customer.phone && <div style={{ color: '#475569', fontSize: 12 }}>{customer.phone}</div>}
               {customer.email && <div style={{ color: '#475569', fontSize: 12 }}>{customer.email}</div>}
               {isDomestic && customer.gstin && <div style={{ color: '#475569', fontSize: 12 }}>GSTIN: {customer.gstin}</div>}
               {!isDomestic && customer.tax_id && <div style={{ color: '#475569', fontSize: 12 }}>Tax ID: {customer.tax_id}</div>}
+              {customer.buyer_type === 'Exporter' && <div style={{ color: '#92400e', fontSize: 11, marginTop: 4 }}>Domestic prices shown — export grade +₹5–10/kg, quoted separately.</div>}
             </>
           )}
         </div>
@@ -1017,6 +1132,12 @@ function InvoicePreview({ inv, banks, company }: { inv: Invoice; banks: BankAcco
             <tr style={{ background: '#f8fafc', borderTop: '1px solid #e2e8f0' }}>
               <td colSpan={5} style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 700 }}>GRAND TOTAL</td>
               <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 700, fontSize: 15 }}>{formatCurrency(inv.total, cur)}</td>
+            </tr>
+          )}
+          {isDomestic && discount > 0 && (
+            <tr style={{ background: '#f8fafc' }}>
+              <td colSpan={5} style={{ padding: '6px 12px', textAlign: 'right', color: '#64748b', fontSize: 12 }}>Discount</td>
+              <td style={{ padding: '6px 12px', textAlign: 'right', color: '#64748b', fontSize: 12, fontWeight: 600 }}>− {formatCurrency(discount, 'INR')}</td>
             </tr>
           )}
           {isDomestic && advance > 0 && (

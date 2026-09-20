@@ -38,7 +38,13 @@ export default function Customers() {
 
   async function fetchCustomers() {
     setLoading(true);
-    const { data } = await supabase.from('customers').select('*').order('created_at', { ascending: false });
+    // WBE-Fresh domestic customers live on their own screen (WBE Fresh > Customers);
+    // keep them out of the main Wander Breeze export customer list.
+    const { data } = await supabase
+      .from('customers')
+      .select('*')
+      .neq('segment', 'WBE-Fresh')
+      .order('created_at', { ascending: false });
     setCustomers(data ?? []);
     setLoading(false);
   }
