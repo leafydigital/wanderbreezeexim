@@ -268,6 +268,12 @@ export default function Vegetables() {
         margin_updated_by: user?.id ?? null,
         margin_updated_at: new Date().toISOString(),
       }).eq('is_approved', true).gt('supplier_price', 0);
+      // ₹0 items were skipped above (no margin to apply), but they were
+      // still submitted/locked by the supplier — unlock them too, without
+      // touching their margin, so they don't stay stuck on "Locked" forever.
+      await supabase.from('wbefresh_vegetables').update({
+        price_locked: false,
+      }).eq('is_approved', true).eq('supplier_price', 0);
       setMarginOpen(false);
       setMarginValue('');
       fetchVeggies();

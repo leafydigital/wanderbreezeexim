@@ -45,8 +45,8 @@ export default function AdminFreshConsole() {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
-      <aside className="hidden lg:flex flex-col w-60 bg-slate-900 text-white flex-shrink-0 min-h-screen sticky top-0">
-        <div className="px-5 py-4 border-b border-slate-700 flex items-center gap-3">
+      <aside className="hidden lg:flex flex-col w-60 bg-slate-900 text-white flex-shrink-0 h-screen sticky top-0">
+        <div className="px-5 py-4 border-b border-slate-700 flex items-center gap-3 flex-shrink-0">
           <div className="w-9 h-9 bg-amber-500 rounded-lg flex items-center justify-center flex-shrink-0">
             <Leaf size={18} className="text-white" />
           </div>
@@ -56,7 +56,7 @@ export default function AdminFreshConsole() {
           </div>
         </div>
 
-        <nav className="p-3 space-y-0.5 flex-1">
+        <nav className="p-3 space-y-0.5 flex-1 overflow-y-auto">
           {TABS.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
@@ -69,7 +69,7 @@ export default function AdminFreshConsole() {
           ))}
         </nav>
 
-        <div className="border-t border-slate-700 p-3 space-y-2">
+        <div className="border-t border-slate-700 p-3 space-y-2 flex-shrink-0">
           <button onClick={switchToExport} className="w-full flex items-center justify-center gap-2 text-xs font-medium text-teal-300 bg-slate-800 hover:bg-slate-700 px-3 py-2 rounded-lg transition-colors">
             <Globe2 size={13} /> Switch to Export Dashboard
           </button>
