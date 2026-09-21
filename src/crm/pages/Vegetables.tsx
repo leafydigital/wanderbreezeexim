@@ -20,6 +20,10 @@ export default function Vegetables() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<'catalog' | 'pending'>('catalog');
   const [search, setSearch] = useState('');
+  // When true, only show vegetables the supplier has actually changed
+  // (price_locked) — so Admin can see exactly what needs review instead of
+  // scanning the whole catalog.
+  const [showOnlyReview, setShowOnlyReview] = useState(false);
 
   const [priceEdits, setPriceEdits] = useState<Record<string, { supplier_price?: string; margin?: string; packing_unit?: string; packing_qty?: string }>>({});
   const [savingId, setSavingId] = useState<string | null>(null);
@@ -56,11 +60,22 @@ export default function Vegetables() {
 
   useEffect(() => { fetchVeggies(); }, [fetchVeggies]);
 
+  // price_locked goes true for the WHOLE catalog the moment the supplier
+  // clicks "Prices Updated" — it's not a per-item "this one changed" flag.
+  // The real per-item signal is: has the supplier touched this vegetable's
+  // price more recently than Admin last applied a margin to it?
+  function isPendingReview(v: Vegetable) {
+    if (!v.supplier_updated_at) return false;
+    if (!v.margin_updated_at) return true;
+    return new Date(v.supplier_updated_at).getTime() > new Date(v.margin_updated_at).getTime();
+  }
+
   const catalog = veggies.filter(v => v.is_approved);
   const pending = veggies.filter(v => !v.is_approved);
-  const visible = (tab === 'catalog' ? catalog : pending).filter(v =>
-    !search.trim() || [v.name_en, v.name_ta, v.name_ml].some(n => n?.toLowerCase().includes(search.trim().toLowerCase()))
-  );
+  const needsReviewCount = catalog.filter(isPendingReview).length;
+  const visible = (tab === 'catalog' ? catalog : pending)
+    .filter(v => !search.trim() || [v.name_en, v.name_ta, v.name_ml].some(n => n?.toLowerCase().includes(search.trim().toLowerCase())))
+    .filter(v => tab !== 'catalog' || !showOnlyReview || isPendingReview(v));
 
   function edited(v: Vegetable) {
     const e = priceEdits[v.id] ?? {};
@@ -310,6 +325,16 @@ export default function Vegetables() {
           />
         </div>
         <div className="flex items-center gap-2">
+          {needsReviewCount > 0 && (
+            <button
+              onClick={() => { setTab('catalog'); setShowOnlyReview(s => !s); }}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                showOnlyReview ? 'bg-red-600 text-white' : 'bg-red-100 text-red-800 hover:bg-red-200'
+              }`}
+            >
+              <Clock size={14} /> {needsReviewCount} Changed
+            </button>
+          )}
           <button onClick={openAdd} className="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">
             <Plus size={16} /> Add Vegetable
           </button>
@@ -332,10 +357,29 @@ export default function Vegetables() {
           <AlertTriangle size={18} className="text-amber-600 flex-shrink-0" />
           <div className="flex-1">
             <p className="text-sm font-semibold text-amber-800">Supplier submitted updated prices</p>
-            <p className="text-xs text-amber-700">Review the supplier prices below and apply a margin to publish them.</p>
+            <p className="text-xs text-amber-700">
+              {needsReviewCount > 0
+                ? `${needsReviewCount} vegetable${needsReviewCount === 1 ? '' : 's'} changed — review them below, then apply a margin to publish.`
+                : 'Review the supplier prices below and apply a margin to publish them.'}
+            </p>
           </div>
-          <button onClick={() => setMarginOpen(true)} className="text-xs font-medium bg-white border border-amber-300 text-amber-800 px-3 py-1.5 rounded-lg hover:bg-amber-100 transition-colors whitespace-nowrap">
+          <button
+            onClick={() => { setTab('catalog'); setShowOnlyReview(true); }}
+            className="text-xs font-medium bg-white border border-amber-300 text-amber-800 px-3 py-1.5 rounded-lg hover:bg-amber-100 transition-colors whitespace-nowrap"
+          >
             Review now
+          </button>
+        </div>
+      )}
+
+      {showOnlyReview && tab === 'catalog' && (
+        <div className="flex items-center gap-2 bg-teal-50 border border-teal-200 rounded-lg px-3 py-2">
+          <Clock size={14} className="text-teal-700 flex-shrink-0" />
+          <p className="text-xs text-teal-800 flex-1">
+            Showing only the {needsReviewCount} vegetable{needsReviewCount === 1 ? '' : 's'} the supplier changed since your last review.
+          </p>
+          <button onClick={() => setShowOnlyReview(false)} className="text-xs font-medium text-teal-700 hover:text-teal-900 whitespace-nowrap">
+            Show all
           </button>
         </div>
       )}
@@ -362,7 +406,9 @@ export default function Vegetables() {
           <div className="w-7 h-7 border-4 border-teal-500 border-t-transparent rounded-full animate-spin" />
         </div>
       ) : visible.length === 0 ? (
-        <p className="text-sm text-gray-500 py-12 text-center">No vegetables found.</p>
+        <p className="text-sm text-gray-500 py-12 text-center">
+          {showOnlyReview ? 'Nothing pending review right now.' : 'No vegetables found.'}
+        </p>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
           {visible.map(v => {
@@ -370,8 +416,14 @@ export default function Vegetables() {
             const sp = parseFloat(e.supplier_price) || 0;
             const m = parseFloat(e.margin) || 0;
             const dirty = priceEdits[v.id] !== undefined;
+            const pendingReview = isPendingReview(v);
             return (
-              <div key={v.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col shadow-sm">
+              <div
+                key={v.id}
+                className={`rounded-xl border overflow-hidden flex flex-col shadow-sm ${
+                  pendingReview ? 'bg-red-50 border-red-300' : 'bg-white border-gray-200'
+                }`}
+              >
                 <div className="relative h-28 bg-gray-100 flex items-center justify-center overflow-hidden">
                   {v.image_url ? (
                     <img src={v.image_url} alt={v.name_en} className="w-full h-full object-cover" />
@@ -392,9 +444,12 @@ export default function Vegetables() {
                   <div>
                     <div className="flex items-center gap-1.5">
                       <p className="text-sm font-semibold text-gray-900 truncate">{v.name_en}</p>
-                      {v.price_locked && (
-                        <span title="Awaiting your review">
-                          <Clock size={11} className="text-amber-500 flex-shrink-0" />
+                      {pendingReview && (
+                        <span
+                          title="Supplier changed this price — awaiting your review"
+                          className="flex-shrink-0 flex items-center gap-0.5 bg-red-100 text-red-700 text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
+                        >
+                          <Clock size={9} /> Changed
                         </span>
                       )}
                     </div>
