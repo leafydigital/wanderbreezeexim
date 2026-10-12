@@ -19,6 +19,7 @@ import {
   Layers, List, Sparkles,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { MainImageUpload, GalleryUpload, type GalleryImage } from '../components/ProductImageUploader';
 
 // ── Types ─────────────────────────────────────────────────────
 interface Spec { label: string; value: string; }
@@ -43,6 +44,7 @@ interface ProductCategory {
   overview_title: string | null;
   overview_text: string | null;
   image_path: string | null;
+  gallery_images: GalleryImage[] | null;
   color: string | null;
   hs_code: string | null;
   unit: string;
@@ -97,7 +99,7 @@ const emptyCat = (): Partial<ProductCategory> => ({
     { label: 'MOQ', value: '' },    { label: 'Certifications', value: '' },
   ],
   overview_title: '', overview_text: '',
-  image_path: '', hs_code: '', unit: 'KG', purchase_price: null,
+  image_path: '', gallery_images: [], hs_code: '', unit: 'KG', purchase_price: null,
 });
 
 const emptyVar = (): Partial<ProductVariant> => ({
@@ -207,6 +209,7 @@ function CategoryModal({
     try {
       await onSave({
         ...form,
+        gallery_images: (form.gallery_images || []).filter(g => g.url),
         hero_bullets: (form.hero_bullets || []).filter(b => b.trim()),
         specs:        (form.specs || []).filter(s => s.label.trim() && s.value.trim()),
       });
@@ -276,7 +279,7 @@ function CategoryModal({
                     <Sparkles size={15} /> AI Auto-Fill
                   </div>
                   <div style={{ fontSize: 12, color: '#7C3AED', marginTop: 2 }}>
-                    Enter product name + image path → AI fills all page content, SEO, specs, MOQ automatically
+                    Enter product name → AI fills all page content, SEO, specs, MOQ automatically
                   </div>
                 </div>
                 <button
@@ -323,9 +326,23 @@ function CategoryModal({
               </div>
 
               <div>
-                <label style={S.label}>IMAGE PATH</label>
-                <input value={form.image_path || ''} onChange={e => set('image_path', e.target.value)} style={S.input} placeholder="/Images/Cardamom.png" />
-                <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 4 }}>Path to image in /public/Images/ folder</div>
+                <label style={S.label}>MAIN PRODUCT IMAGE</label>
+                <MainImageUpload
+                  value={form.image_path || ''}
+                  onChange={url => set('image_path', url)}
+                  productSlug={form.slug || form.name || 'product'}
+                />
+                <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 4 }}>Shown on the product card and at the top of the product page</div>
+              </div>
+
+              <div>
+                <label style={S.label}>PRODUCT IMAGES GALLERY</label>
+                <GalleryUpload
+                  images={form.gallery_images || []}
+                  onChange={imgs => set('gallery_images', imgs)}
+                  productSlug={form.slug || form.name || 'product'}
+                  productName={form.name || ''}
+                />
               </div>
 
               <div>

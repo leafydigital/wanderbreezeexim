@@ -6,4 +6,4 @@ Disallow: /search
 Disallow: /*?
 Disallow: /.git/
 
-Sitemap: https://wanderbreezeexim.com/sitemap.xml
+Sitemap: https://www.wanderbreezeexim.com/sitemap.xml

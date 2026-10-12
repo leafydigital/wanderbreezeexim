@@ -16,7 +16,10 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import ContactModal from './components/ContactModal';
+import ProductGallery, { type GalleryImage } from './components/ProductGallery';
 import { supabase } from './crm/lib/supabase';
+
+const SITE = 'https://www.wanderbreezeexim.com';
 
 interface Spec { label: string; value: string; }
 
@@ -39,7 +42,9 @@ interface ProductCategory {
   overview_title: string | null;
   overview_text: string | null;
   image_path: string | null;
+  gallery_images: GalleryImage[] | null;
   hs_code: string | null;
+  updated_at: string | null;
 }
 
 export default function DynamicProductPage() {
@@ -64,7 +69,6 @@ export default function DynamicProductPage() {
         return;
       }
       setProduct(data);
-      document.title = data.meta_title || data.page_title || data.name;
       setLoading(false);
     }
     load();
@@ -86,16 +90,59 @@ export default function DynamicProductPage() {
   const whatsappText = `Hello, I am interested in importing ${product.name} from India. Please share price and details.`;
   const whatsappLink = `https://wa.me/917358060254?text=${encodeURIComponent(whatsappText)}`;
 
+  // ── SEO data ──
+  const abs = (u: string) => (u.startsWith('http') ? u : `${SITE}${u.startsWith('/') ? '' : '/'}${u}`);
+  const pageUrl = `${SITE}/products/${product.slug}`;
+  const seoTitle = product.meta_title || `${product.page_title || product.name} | Wander Breeze Exim`;
+  const seoDescription = product.meta_description
+    || product.page_subtitle
+    || `Export quality ${product.name} from India. Bulk supply, competitive prices and export documentation from Wander Breeze Exim.`;
+  const allImages = [product.image_path, ...(product.gallery_images || []).map(g => g.url)]
+    .filter((u): u is string => !!u).map(abs);
+  const jsonLd = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: product.name,
+      description: seoDescription,
+      url: pageUrl,
+      category: product.category_group,
+      ...(allImages.length ? { image: allImages } : {}),
+      ...(product.hs_code ? { sku: product.hs_code } : {}),
+      brand: { '@type': 'Brand', name: 'Wander Breeze Exim' },
+      ...(product.origin ? { countryOfOrigin: product.origin } : {}),
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE}/` },
+        { '@type': 'ListItem', position: 2, name: 'Products', item: `${SITE}/#products` },
+        { '@type': 'ListItem', position: 3, name: product.name, item: pageUrl },
+      ],
+    },
+  ];
+
   return (
     <div className="bg-gray-50">
       {/* SEO */}
-      {product.meta_title && (
-        <Helmet>
-          <title>{product.meta_title}</title>
-          {product.meta_description && <meta name="description" content={product.meta_description} />}
-          {product.meta_keywords && <meta name="keywords" content={product.meta_keywords} />}
-        </Helmet>
-      )}
+      <Helmet>
+        <title>{seoTitle}</title>
+        <meta name="description" content={seoDescription} />
+        {product.meta_keywords && <meta name="keywords" content={product.meta_keywords} />}
+        <link rel="canonical" href={pageUrl} />
+        <meta property="og:type" content="product" />
+        <meta property="og:site_name" content="Wander Breeze Exim" />
+        <meta property="og:title" content={seoTitle} />
+        <meta property="og:description" content={seoDescription} />
+        <meta property="og:url" content={pageUrl} />
+        {allImages[0] && <meta property="og:image" content={allImages[0]} />}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={seoTitle} />
+        <meta name="twitter:description" content={seoDescription} />
+        {allImages[0] && <meta name="twitter:image" content={allImages[0]} />}
+        <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
+      </Helmet>
 
       {/* ── HERO ── */}
       <section className="max-w-7xl mx-auto px-6 py-20 grid md:grid-cols-2 gap-16 items-center">
@@ -134,7 +181,8 @@ export default function DynamicProductPage() {
           <div>
             <img
               src={product.image_path}
-              alt={product.page_title || product.name}
+              alt={`${product.name} – ${product.page_title || 'export quality from India'}`}
+              fetchPriority="high"
               className="rounded-xl shadow-lg w-full object-cover"
             />
           </div>
@@ -180,6 +228,9 @@ export default function DynamicProductPage() {
           </div>
         </section>
       )}
+
+      {/* ── PRODUCT IMAGES (separate section) ── */}
+      <ProductGallery images={product.gallery_images} productName={product.name} />
 
       {/* ── TECH SPECS ── */}
       {product.specs && product.specs.length > 0 && (

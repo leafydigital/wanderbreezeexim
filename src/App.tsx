@@ -27,9 +27,6 @@ import ThankYou from './pages/ThankYou';
 import Reports from './components/Reports';
 import Packing from './components/Packaging';
 import About from './components/About';
-import CoconutExportFromIndia from './pages/CoconutExportFromIndia';
-import CardamomExportFromIndia from './pages/CardamomExportFromIndia';
-import BlackPepperExportFromIndia from './pages/BlackPepperExportFromIndia';
 import UnifiedLogin from './pages/UnifiedLogin';
 import DashboardChoice from './pages/DashboardChoice';
 
@@ -136,9 +133,6 @@ function App() {
         <Route path="/products/banana" element={<WebsiteLayout><Banana /></WebsiteLayout>} />
         <Route path="/products/yellow-pumpkin" element={<WebsiteLayout><YellowPumpkin /></WebsiteLayout>} />
         <Route path="/products/sweet-potato" element={<WebsiteLayout><SweetPotato /></WebsiteLayout>} />
-        <Route path="/coconut-export-from-india" element={<WebsiteLayout><CoconutExportFromIndia /></WebsiteLayout>} />
-        <Route path="/cardamom-export-from-india" element={<WebsiteLayout><CardamomExportFromIndia /></WebsiteLayout>} />
-        <Route path="/black-pepper-export-from-india" element={<WebsiteLayout><BlackPepperExportFromIndia /></WebsiteLayout>} />
         <Route path="/thank-you" element={<WebsiteLayout><ThankYou /></WebsiteLayout>} />
         <Route path="*" element={<WebsiteLayout><NotFound /></WebsiteLayout>} />
         <Route path="/products/:slug" element={<WebsiteLayout><DynamicProductPage /></WebsiteLayout>} />
