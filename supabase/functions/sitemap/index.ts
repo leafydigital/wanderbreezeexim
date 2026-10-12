@@ -20,10 +20,6 @@ const STATIC_PAGES = [
   { path: "/terms-conditions", priority: "0.50" },
   { path: "/privacy-policy", priority: "0.50" },
 ];
-const STATIC_PRODUCT_SLUGS = [
-  "cardamom", "pepper", "coconuts", "onion", "banana",
-  "yellow-pumpkin", "sweet-potato", "coco-peats",
-];
 
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
@@ -57,7 +53,6 @@ Deno.serve(async () => {
 
   for (const p of STATIC_PAGES.slice(0, 1)) add(p.path, today, p.priority);
   for (const p of data || []) if (p.slug) add(`/products/${p.slug}`, day(p.updated_at || p.created_at), "0.80");
-  for (const slug of STATIC_PRODUCT_SLUGS) add(`/products/${slug}`, today, "0.80");
   for (const p of STATIC_PAGES.slice(1)) add(p.path, today, p.priority);
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
