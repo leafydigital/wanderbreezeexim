@@ -14,9 +14,6 @@ const SITE = "https://www.wanderbreezeexim.com";
 // Hand-coded pages in src/App.tsx (not stored in the database)
 const STATIC_PAGES = [
   { path: "/", priority: "1.00" },
-  { path: "/coconut-export-from-india", priority: "0.80" },
-  { path: "/cardamom-export-from-india", priority: "0.80" },
-  { path: "/black-pepper-export-from-india", priority: "0.80" },
   { path: "/terms-conditions", priority: "0.50" },
   { path: "/privacy-policy", priority: "0.50" },
 ];
